@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BRI Planner</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --ink: #142033;
+      --muted: #667085;
+      --line: #d8e0ea;
+      --navy: #0b1f3a;
+      --blue: #2563eb;
+      --cyan: #0e7490;
+      --green: #047857;
+      --amber: #b45309;
+      --red: #dc2626;
+      --soft-blue: #eff6ff;
+      --soft-cyan: #ecfeff;
+      --soft-green: #ecfdf5;
+      --soft-amber: #fffbeb;
+      --soft-red: #fef2f2;
+      --shadow: 0 12px 28px rgba(20, 32, 51, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, select { font: inherit; }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 268px minmax(0, 1fr);
+    }
+
+    .rail {
+      background: var(--navy);
+      color: white;
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,.16);
+    }
+
+    .mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      color: var(--navy);
+      font-weight: 900;
+    }
+
+    .brand strong { display: block; font-size: 16px; }
+    .brand span { display: block; color: #b8c4d6; font-size: 12px; margin-top: 2px; }
+
+    .nav-label {
+      margin: 22px 0 8px;
+      color: #b8c4d6;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .rail-card {
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(255,255,255,.06);
+      margin-bottom: 10px;
+    }
+
+    .rail-card b { display: block; font-size: 13px; }
+    .rail-card span { display: block; margin-top: 4px; font-size: 12px; color: #cbd5e1; line-height: 1.35; }
+
+    .main { min-width: 0; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+    }
+
+    h1 { margin: 0; font-size: 24px; line-height: 1.1; }
+    .subtle { margin-top: 4px; color: var(--muted); font-size: 13px; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .file-wrap, .input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      padding: 8px 10px;
+      min-height: 42px;
+    }
+
+    .file-wrap input { max-width: 250px; }
+
+    .input-wrap label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .input-wrap input {
+      width: 76px;
+      border: 0;
+      outline: 0;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .btn {
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--blue);
+      color: white;
+      padding: 0 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn.secondary {
+      background: white;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .content { padding: 22px 24px 40px; }
+
+    .notice {
+      border: 1px dashed #b7c4d8;
+      background: #fff;
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .notice h2 { margin: 0; font-size: 20px; }
+    .notice p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
+
+    .status {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .status.ok { color: var(--green); }
+    .status.err { color: var(--red); }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .kpi {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--blue);
+      background: white;
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      min-height: 102px;
+    }
+
+    .kpi.green { border-left-color: var(--green); }
+    .kpi.cyan { border-left-color: var(--cyan); }
+    .kpi.amber { border-left-color: var(--amber); }
+    .kpi.red { border-left-color: var(--red); }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .kpi-value {
+      margin-top: 8px;
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .kpi-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      background: #eef2f7;
+      color: #475467;
+      border-radius: 8px 8px 0 0;
+      padding: 10px 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: white;
+      color: var(--blue);
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .panel-head h2 { margin: 0; font-size: 17px; }
+    .panel-head p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid #edf1f6; text-align: left; vertical-align: top; }
+    th {
+      color: var(--muted);
+      background: #fbfcfe;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 900;
+    }
+    td.num, th.num { text-align: right; }
+    tr:hover td { background: #fbfcfe; }
+
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .client-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .client-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .client-name { font-weight: 900; font-size: 16px; }
+    .client-code { margin-top: 3px; color: var(--muted); font-size: 12px; font-weight: 800; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+      background: #eef2f7;
+      color: #475467;
+    }
+
+    .pill.good { background: var(--soft-green); color: var(--green); }
+    .pill.warn { background: var(--soft-amber); color: var(--amber); }
+    .pill.bad { background: var(--soft-red); color: var(--red); }
+    .pill.info { background: var(--soft-blue); color: var(--blue); }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .mini-stat {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 9px;
+    }
+
+    .mini-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+
+    .mini-stat strong { display: block; margin-top: 3px; font-size: 18px; }
+
+    .team-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border-top: 1px solid #edf1f6;
+      padding: 10px 0;
+    }
+
+    .team-row:first-of-type { border-top: 0; }
+
+    .team-title { font-weight: 900; }
+    .team-meta { margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .team-people { text-align: right; font-size: 20px; font-weight: 900; }
+    .team-people span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; }
+
+    .rate-input {
+      width: 76px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 6px;
+      font-weight: 800;
+      text-align: right;
+      background: white;
+    }
+
+    .placeholder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .placeholder {
+      border: 1px dashed #b7c4d8;
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcfe;
+    }
+
+    .placeholder b { display: block; }
+    .placeholder span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+
+    .hidden { display: none !important; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(11,31,58,.62);
+      padding: 20px;
+      z-index: 40;
+    }
+
+    .modal[hidden] { display: none; }
+
+    .modal-card {
+      width: min(1120px, 100%);
+      max-height: 88vh;
+      overflow: hidden;
+      background: white;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 26px 70px rgba(0,0,0,.28);
+    }
+
+    .modal-head {
+      padding: 16px;
+      background: var(--navy);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-head h2 { margin: 0; font-size: 20px; }
+    .modal-head p { margin: 4px 0 0; color: #cbd5e1; font-size: 13px; }
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.08);
+      color: white;
+      border-radius: 8px;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .modal-body { overflow: auto; }
+
+    @media (max-width: 1100px) {
+      .shell { grid-template-columns: 1fr; }
+      .rail { position: static; height: auto; }
+      .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 720px) {
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .actions { justify-content: flex-start; width: 100%; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .client-grid { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      .rail, .actions, .tabs, .btn, .modal { display: none !important; }
+      .shell { display: block; }
+      .topbar { position: static; }
+      .content { padding: 12px; }
+      .panel, .kpi, .client-card { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="brand">
+        <div class="mark">BRI</div>
+        <div>
+          <strong>BRI Planner</strong>
+          <span>Outbound labour planning</span>
+        </div>
+      </div>
+
+      <div class="nav-label">Baseline</div>
+      <div class="rail-card">
+        <b>Productive day</b>
+        <span>6.85 hours per person after morning break and lunch.</span>
+      </div>
+      <div class="rail-card">
+        <b>Included work</b>
+        <span>Open KPI-customer orders. Picked Complete is excluded.</span>
+      </div>
+      <div class="rail-card">
+        <b>Inbound planning</b>
+        <span>Reserved for receipts, putaway, container unloads, and pallet movement when the inbound file is ready.</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Daily Resource Planner</h1>
+          <div class="subtle" id="sourceText">No outstanding orders file loaded</div>
+        </div>
+        <div class="actions">
+          <div class="file-wrap">
+            <input id="fileInput" type="file" accept=".xlsx,.xls,.xlsm">
+          </div>
+          <div class="input-wrap">
+            <label for="productiveHours">Hours/person</label>
+            <input id="productiveHours" type="number" min="1" max="12" step="0.05" value="6.85">
+          </div>
+          <button class="btn secondary" type="button" id="resetRates">Reset rates</button>
+          <button class="btn" type="button" onclick="window.print()">Print</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="notice" id="emptyState">
+          <h2>Upload the daily Outstanding Orders report</h2>
+          <p>The planner will calculate picking, packing, and order-prep labour for the customer accounts currently mapped to KPI baselines.</p>
+          <p class="status" id="uploadStatus"></p>
+        </div>
+
+        <div id="dashboard" class="hidden">
+          <section class="summary-grid" id="summaryGrid"></section>
+
+          <div class="tabs">
+            <button class="tab active" type="button" data-tab="outbound">Outbound Supervisor</button>
+            <button class="tab" type="button" data-tab="inbound">Inbound Supervisor</button>
+            <button class="tab" type="button" data-tab="orders">Order Detail</button>
+          </div>
+
+          <section id="tab-outbound">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Customer Labour Plan</h2>
+                  <p>Picking, packing, and admin/order-prep teams by KPI customer.</p>
+                </div>
+                <span class="status ok" id="includedStatus"></span>
+              </div>
+              <div class="client-grid" id="clientGrid"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Team Summary</h2>
+                  <p>People required by workstream, rounded up for planning.</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Team</th>
+                      <th class="num">Hours</th>
+                      <th class="num">People</th>
+                      <th class="num">Rounded</th>
+                      <th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody id="teamSummaryRows"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="tab-inbound" class="hidden">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Inbound Supervisor Workload</h2>
+                  <p>Designed for the next inbound file: receipts, putaway, containers, and pallet movements.</p>
+                </div>
+                <span class="pill warn">Awaiting inbound source file</span>
+              </div>
+              <div class="placeholder-grid">
+                <div class="placeholder">
+                  <b>Receipt / sorting</b>
+                  <span>Not available from the outstanding orders report. Will calculate when the inbound workload file is supplied.</span>
+                </div>
+                <div class="placeholder">
+                  <b>Putaway</b>
+                  <span>Needs receipt/carton/pallet data. Visible now so inbound planning has a home in the app.</span>
+                </div>
+                <div class="placeholder">
+                  <b>Container unloads</b>
+                  <span>Needs container or pallet-count source. Not included in outbound labour totals.</span>
+                </div>
+                <div class="placeholder">
+                  <b>Pallet movement / high reach</b>
+                  <span>Needs task/location data. Not included in current headcount.</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="tab-orders" class="hidden">
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Included and Excluded Orders</h2>
+                  <p>Filtered to KPI customers. Picked Complete is excluded from labour but remains visible.</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Order number</th>
+                      <th>Receiver / order name</th>
+                      <th class="num">Lines</th>
+                      <th class="num">Units</th>
+                      <th>Due date</th>
+                      <th>Status</th>
+                      <th>Planning</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orderRows"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="detailModal" hidden>
+    <section class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="detailTitle">Customer detail</h2>
+          <p id="detailSubtitle"></p>
+        </div>
+        <button class="modal-close" type="button" id="closeModal">×</button>
+      </div>
+      <div class="modal-body table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order number</th>
+              <th>Receiver / order name</th>
+              <th class="num">Lines</th>
+              <th class="num">Units</th>
+              <th>Due date</th>
+              <th>Status</th>
+              <th>Planning</th>
+            </tr>
+          </thead>
+          <tbody id="detailRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const PRODUCTIVE_HOURS_DEFAULT = 6.85;
+    const EXCLUDED_STATUSES = new Set(["picked complete"]);
+    const REVIEW_STATUSES = new Set(["did not allocate", "empty order"]);
+
+    const customers = [
+      {
+        id: "tbs",
+        name: "TBS",
+        codes: ["TBS"],
+        tasks: [
+          { id: "pick", team: "Picking", label: "Pick - Medium line proxy", driver: "lines", baselineRate: 50.9090909091, unit: "lines/hr", source: "TBS KPI: Pick - Medium. Report does not split small/medium/large, so this is a conservative default." },
+          { id: "pack", team: "Packing", label: "Wrap & pack order", driver: "orders", baselineRate: 33.6, unit: "orders/hr", source: "TBS KPI: Order admin fee applied to pack activity." }
+        ]
+      },
+      {
+        id: "makita",
+        name: "Makita",
+        codes: ["MAKAUSSYD"],
+        tasks: [
+          { id: "pick", team: "Picking", label: "Pick line proxy", driver: "lines", baselineRate: 60, unit: "lines/hr", source: "Makita KPI: Pick - Unit. Used as line proxy until carton/unit split is available." },
+          { id: "prep", team: "Order prep / admin", label: "Order print and prep", driver: "orders", baselineRate: 40, unit: "orders/hr", source: "Makita KPI: Order admin fee, print label and prep for pickers." },
+          { id: "pack", team: "Packing", label: "Label and document order", driver: "orders", baselineRate: 33.6, unit: "orders/hr", source: "Makita KPI: Order admin fee applied to picker tasks." }
+        ]
+      },
+      {
+        id: "tentops",
+        name: "Ten Tops",
+        codes: ["TENTSYD-WH"],
+        tasks: [
+          { id: "pick", team: "Picking", label: "Pick fee per carton line proxy", driver: "lines", baselineRate: 150, unit: "lines/hr", source: "Ten Tops KPI: Pick fee per carton. Report has lines, not carton count." },
+          { id: "admin", team: "Order prep / admin", label: "Operational admin", driver: "orders", baselineRate: 7.7538461538, unit: "orders/hr", source: "Ten Tops KPI: Order admin fee / management time." }
+        ]
+      },
+      {
+        id: "flyingtiger",
+        name: "Flying Tiger",
+        codes: ["FLYTSYD-WH-F"],
+        tasks: [
+          { id: "pick", team: "Picking", label: "Pick fee per carton line proxy", driver: "lines", baselineRate: 92, unit: "lines/hr", source: "Flying Tiger KPI: Pick fee per carton. Report has lines, not carton count." }
+        ]
+      },
+      {
+        id: "bbwb2b",
+        name: "BBW B2B",
+        codes: ["AVBBBW"],
+        tasks: [
+          { id: "pick", team: "Picking", label: "Pick - BY LINE", driver: "lines", baselineRate: 23, unit: "lines/hr", source: "BBW B2B KPI: Pick - BY LINE, UOM=Lines." }
+        ]
+      },
+      {
+        id: "bbwecomm",
+        name: "BBW EComm",
+        codes: ["AVRBBW"],
+        tasks: [
+          { id: "pick", team: "Picking", label: "Pick by location line proxy", driver: "lines", baselineRate: 115, unit: "lines/hr", source: "BBW EComm KPI: Pick - by location. Lines used as location proxy." },
+          { id: "pack", team: "Packing", label: "Pack - BY ORDER", driver: "orders", baselineRate: 18, unit: "orders/hr", source: "BBW EComm KPI: Pack - BY ORDER. Pack - BY UNIT is marked DO NOT USE." }
+        ]
+      }
+    ];
+
+    let allOrders = [];
+    let rateOverrides = {};
+    let productiveHours = PRODUCTIVE_HOURS_DEFAULT;
+
+    const fmt = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 0 });
+    const fmt1 = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 1 });
+    const moneyless = value => Number.isFinite(value) ? fmt.format(value) : "0";
+    const clean = value => String(value ?? "").trim();
+    const norm = value => clean(value).toLowerCase().replace(/\s+/g, " ");
+
+    function setStatus(message, tone = "") {
+      const el = document.getElementById("uploadStatus");
+      el.textContent = message;
+      el.className = `status ${tone}`;
+    }
+
+    function normalizeHeader(value) {
+      return clean(value).toLowerCase().replace(/[_./-]+/g, " ").replace(/\s+/g, " ");
+    }
+
+    function findHeaderRow(rows) {
+      for (let i = 0; i < Math.min(rows.length, 30); i++) {
+        const normalized = rows[i].map(normalizeHeader);
+        if (normalized.includes("customer") && normalized.includes("client reference")) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    function makeHeaderMap(row) {
+      const map = {};
+      row.forEach((value, index) => {
+        const key = normalizeHeader(value);
+        if (key) map[key] = index;
+      });
+      return map;
+    }
+
+    function pick(row, headers, names) {
+      for (const name of names) {
+        const idx = headers[normalizeHeader(name)];
+        if (idx !== undefined) return row[idx];
+      }
+      return "";
+    }
+
+    function parseNumber(value) {
+      const text = clean(value).replace(/,/g, "");
+      const n = Number(text);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function excelDate(value) {
+      if (!value) return "";
+      if (value instanceof Date && !isNaN(value)) return value.toLocaleDateString("en-AU");
+      if (typeof value === "number") {
+        const date = new Date(Math.round((value - 25569) * 86400 * 1000));
+        return date.toLocaleDateString("en-AU");
+      }
+      return clean(value);
+    }
+
+    function customerConfig(code) {
+      return customers.find(customer => customer.codes.includes(code));
+    }
+
+    function parseOrders(rows) {
+      const headerIndex = findHeaderRow(rows);
+      if (headerIndex < 0) {
+        throw new Error("Could not find Customer and Client Reference columns.");
+      }
+
+      const headers = makeHeaderMap(rows[headerIndex]);
+      const parsed = [];
+      for (const row of rows.slice(headerIndex + 1)) {
+        const code = clean(pick(row, headers, ["Customer"]));
+        if (!code) continue;
+        const config = customerConfig(code);
+        if (!config) continue;
+        const status = clean(pick(row, headers, ["Status"])) || "Unspecified";
+        const statusKey = norm(status);
+        const excluded = EXCLUDED_STATUSES.has(statusKey);
+        const review = REVIEW_STATUSES.has(statusKey);
+        parsed.push({
+          customerCode: code,
+          customerId: config.id,
+          customerName: config.name,
+          orderNumber: clean(pick(row, headers, ["Client Reference", "Order Number", "Sales Order"])) || "Unspecified",
+          receiver: clean(pick(row, headers, ["Receiver Name", "Receiver", "Customer Name"])) || "Unspecified",
+          lines: parseNumber(pick(row, headers, ["Order Line Count", "Lines"])),
+          units: parseNumber(pick(row, headers, ["Order Units", "Units", "Qty"])),
+          dueDate: excelDate(pick(row, headers, ["Despatch Due Date", "Due Date"])),
+          status,
+          included: !excluded,
+          review,
+          reason: excluded ? "Excluded: Picked Complete" : review ? "Included: needs review" : "Included"
+        });
+      }
+      return parsed;
+    }
+
+    function groupByCustomer() {
+      return customers.map(config => {
+        const orders = allOrders.filter(order => order.customerId === config.id);
+        const included = orders.filter(order => order.included);
+        const excluded = orders.filter(order => !order.included);
+        return {
+          config,
+          orders,
+          included,
+          excluded,
+          openOrders: included.length,
+          excludedOrders: excluded.length,
+          lines: included.reduce((sum, order) => sum + order.lines, 0),
+          units: included.reduce((sum, order) => sum + order.units, 0),
+          reviewOrders: included.filter(order => order.review).length
+        };
+      });
+    }
+
+    function quantityFor(group, driver) {
+      if (driver === "orders") return group.openOrders;
+      if (driver === "units") return group.units;
+      return group.lines;
+    }
+
+    function taskKey(customerId, taskId) {
+      return `${customerId}:${taskId}`;
+    }
+
+    function rateFor(customerId, task) {
+      return Number(rateOverrides[taskKey(customerId, task.id)] ?? task.baselineRate);
+    }
+
+    function calculate() {
+      const groups = groupByCustomer();
+      const taskRows = [];
+      for (const group of groups) {
+        for (const task of group.config.tasks) {
+          const quantity = quantityFor(group, task.driver);
+          const rate = rateFor(group.config.id, task);
+          const hours = rate > 0 ? quantity / rate : 0;
+          const people = productiveHours > 0 ? hours / productiveHours : 0;
+          taskRows.push({ group, task, quantity, rate, hours, people, rounded: people > 0 ? Math.ceil(people) : 0 });
+        }
+      }
+      return { groups, taskRows };
+    }
+
+    function kpiCard(label, value, note, tone = "") {
+      return `<div class="kpi ${tone}"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div><div class="kpi-note">${note}</div></div>`;
+    }
+
+    function renderSummary(calc) {
+      const included = allOrders.filter(order => order.included);
+      const excluded = allOrders.filter(order => !order.included);
+      const totalLines = included.reduce((sum, order) => sum + order.lines, 0);
+      const totalUnits = included.reduce((sum, order) => sum + order.units, 0);
+      const hours = calc.taskRows.reduce((sum, row) => sum + row.hours, 0);
+      const people = productiveHours ? hours / productiveHours : 0;
+      const teamTotals = teamSummary(calc.taskRows);
+      document.getElementById("summaryGrid").innerHTML = [
+        kpiCard("KPI customers", moneyless(calc.groups.filter(g => g.orders.length).length), `${customers.length} mapped accounts`, "cyan"),
+        kpiCard("Open orders", moneyless(included.length), `${excluded.length} picked-complete excluded`, "blue"),
+        kpiCard("Lines to plan", moneyless(totalLines), `${moneyless(totalUnits)} units shown as reference`, "green"),
+        kpiCard("Labour hours", fmt1.format(hours), `${productiveHours} productive hrs/person`, "amber"),
+        kpiCard("People required", fmt1.format(people), `${Math.ceil(people || 0)} rounded total`, people > 0 ? "red" : ""),
+        kpiCard("Largest team", moneyless(Math.max(...teamTotals.map(row => row.rounded), 0)), `${teamTotals[0]?.team ?? "No work loaded"}`, "cyan")
+      ].join("");
+    }
+
+    function teamSummary(taskRows) {
+      const map = new Map();
+      for (const row of taskRows) {
+        const item = map.get(row.task.team) || { team: row.task.team, hours: 0, people: 0, rounded: 0, notes: [] };
+        item.hours += row.hours;
+        item.people += row.people;
+        item.notes.push(`${row.group.config.name}: ${fmt1.format(row.hours)} hrs`);
+        map.set(row.task.team, item);
+      }
+      return [...map.values()]
+        .map(row => ({ ...row, rounded: row.people > 0 ? Math.ceil(row.people) : 0 }))
+        .sort((a, b) => b.rounded - a.rounded || b.hours - a.hours);
+    }
+
+    function renderTeamSummary(calc) {
+      document.getElementById("teamSummaryRows").innerHTML = teamSummary(calc.taskRows).map(row => `
+        <tr>
+          <td><strong>${row.team}</strong></td>
+          <td class="num">${fmt1.format(row.hours)}</td>
+          <td class="num">${fmt1.format(row.people)}</td>
+          <td class="num"><strong>${row.rounded}</strong></td>
+          <td>${row.notes.slice(0, 4).join(" · ")}${row.notes.length > 4 ? " · ..." : ""}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderClients(calc) {
+      const taskRowsByCustomer = new Map();
+      calc.taskRows.forEach(row => {
+        const list = taskRowsByCustomer.get(row.group.config.id) || [];
+        list.push(row);
+        taskRowsByCustomer.set(row.group.config.id, list);
+      });
+
+      document.getElementById("clientGrid").innerHTML = calc.groups.map(group => {
+        const rows = taskRowsByCustomer.get(group.config.id) || [];
+        const totalPeople = rows.reduce((sum, row) => sum + row.people, 0);
+        const totalRounded = totalPeople > 0 ? Math.ceil(totalPeople) : 0;
+        return `
+          <article class="client-card">
+            <div class="client-top">
+              <div>
+                <div class="client-name">${group.config.name}</div>
+                <div class="client-code">${group.config.codes.join(", ")}</div>
+              </div>
+              <button class="btn secondary" type="button" onclick="openCustomerDetail('${group.config.id}')">Orders</button>
+            </div>
+            <div class="mini-stats">
+              <div class="mini-stat"><span>Open</span><strong>${moneyless(group.openOrders)}</strong></div>
+              <div class="mini-stat"><span>Lines</span><strong>${moneyless(group.lines)}</strong></div>
+              <div class="mini-stat"><span>People</span><strong>${totalRounded}</strong></div>
+            </div>
+            ${group.reviewOrders ? `<div class="pill warn">${group.reviewOrders} needs review</div>` : `<div class="pill good">Ready to plan</div>`}
+            ${rows.map(row => taskRowHtml(row)).join("")}
+          </article>
+        `;
+      }).join("");
+    }
+
+    function taskRowHtml(row) {
+      const key = taskKey(row.group.config.id, row.task.id);
+      return `
+        <div class="team-row">
+          <div>
+            <div class="team-title">${row.task.team}: ${row.task.label}</div>
+            <div class="team-meta">
+              ${moneyless(row.quantity)} ${row.task.driver} ÷
+              <input class="rate-input" type="number" min="0.1" step="0.1" value="${fmtInput(row.rate)}" data-rate-key="${key}">
+              ${row.task.unit} = ${fmt1.format(row.hours)} hrs
+            </div>
+            <div class="team-meta">${row.task.source}</div>
+          </div>
+          <div class="team-people">${row.rounded}<span>${fmt1.format(row.people)} ppl</span></div>
+        </div>
+      `;
+    }
+
+    function fmtInput(value) {
+      return Number(value.toFixed(3));
+    }
+
+    function renderOrders() {
+      const sorted = [...allOrders].sort((a, b) => a.customerName.localeCompare(b.customerName) || Number(b.included) - Number(a.included));
+      document.getElementById("orderRows").innerHTML = sorted.map(order => orderRowHtml(order, true)).join("");
+    }
+
+    function orderRowHtml(order, includeCustomer = false) {
+      const tone = !order.included ? "bad" : order.review ? "warn" : "good";
+      return `
+        <tr>
+          ${includeCustomer ? `<td><strong>${order.customerName}</strong><br><span class="subtle">${order.customerCode}</span></td>` : ""}
+          <td>${escapeHtml(order.orderNumber)}</td>
+          <td>${escapeHtml(order.receiver)}</td>
+          <td class="num">${moneyless(order.lines)}</td>
+          <td class="num">${moneyless(order.units)}</td>
+          <td>${escapeHtml(order.dueDate || "-")}</td>
+          <td>${escapeHtml(order.status)}</td>
+          <td><span class="pill ${tone}">${order.reason}</span></td>
+        </tr>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    }
+
+    function openCustomerDetail(customerId) {
+      const group = groupByCustomer().find(item => item.config.id === customerId);
+      if (!group) return;
+      document.getElementById("detailTitle").textContent = group.config.name;
+      document.getElementById("detailSubtitle").textContent = `${group.openOrders} open orders · ${moneyless(group.lines)} lines · ${group.excludedOrders} picked-complete excluded`;
+      document.getElementById("detailRows").innerHTML = group.orders.map(order => orderRowHtml(order, false)).join("");
+      document.getElementById("detailModal").hidden = false;
+    }
+
+    function closeModal() {
+      document.getElementById("detailModal").hidden = true;
+    }
+
+    function render() {
+      productiveHours = parseNumber(document.getElementById("productiveHours").value) || PRODUCTIVE_HOURS_DEFAULT;
+      const calc = calculate();
+      renderSummary(calc);
+      renderClients(calc);
+      renderTeamSummary(calc);
+      renderOrders();
+      document.getElementById("includedStatus").textContent = `${allOrders.filter(o => o.included).length} included orders from ${allOrders.length} KPI-customer rows`;
+      document.querySelectorAll(".rate-input").forEach(input => {
+        input.addEventListener("input", event => {
+          rateOverrides[event.target.dataset.rateKey] = parseNumber(event.target.value);
+          render();
+        });
+      });
+    }
+
+    async function handleFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      setStatus("Reading workbook...");
+      try {
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+        let best = null;
+        for (const sheetName of workbook.SheetNames) {
+          const sheet = workbook.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+          const headerIndex = findHeaderRow(rows);
+          if (headerIndex >= 0) {
+            const parsed = parseOrders(rows);
+            if (!best || parsed.length > best.orders.length) best = { sheetName, orders: parsed };
+          }
+        }
+        if (!best) throw new Error("No usable outstanding orders sheet found.");
+        allOrders = best.orders;
+        document.getElementById("sourceText").textContent = `${file.name} · ${best.sheetName} · ${allOrders.length} KPI-customer rows`;
+        document.getElementById("emptyState").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
+        setStatus(`Loaded ${allOrders.length} KPI-customer rows`, "ok");
+        render();
+      } catch (error) {
+        console.error(error);
+        setStatus(error.message || "Could not read workbook", "err");
+      }
+    }
+
+    document.getElementById("fileInput").addEventListener("change", handleFile);
+    document.getElementById("productiveHours").addEventListener("input", render);
+    document.getElementById("resetRates").addEventListener("click", () => {
+      rateOverrides = {};
+      document.getElementById("productiveHours").value = PRODUCTIVE_HOURS_DEFAULT;
+      render();
+    });
+    document.getElementById("closeModal").addEventListener("click", closeModal);
+    document.getElementById("detailModal").addEventListener("click", event => {
+      if (event.target.id === "detailModal") closeModal();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeModal();
+    });
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(item => item.classList.toggle("active", item === tab));
+        const id = tab.dataset.tab;
+        ["outbound", "inbound", "orders"].forEach(name => {
+          document.getElementById(`tab-${name}`).classList.toggle("hidden", name !== id);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
