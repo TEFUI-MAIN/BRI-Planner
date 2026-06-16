@@ -4,6 +4,8 @@ Static labour planning dashboard for BRI Sydney supervisors.
 
 The planner lets supervisors upload the daily Outstanding Orders report and calculates outbound labour requirements for KPI-mapped customer accounts. Files are processed locally in the browser; no order data is uploaded to a server.
 
+Live site: https://tefui-main.github.io/BRI-Planner/
+
 ## Current Scope
 
 - Upload daily Outstanding Orders Excel report.
