@@ -1,1085 +1,1230 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BRI Planner</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    :root {
-      --bg: #f5f7fb;
-      --panel: #ffffff;
-      --ink: #142033;
-      --muted: #667085;
-      --line: #d8e0ea;
-      --navy: #0b1f3a;
-      --blue: #2563eb;
-      --cyan: #0e7490;
-      --green: #047857;
-      --amber: #b45309;
-      --red: #dc2626;
-      --soft-blue: #eff6ff;
-      --soft-cyan: #ecfeff;
-      --soft-green: #ecfdf5;
-      --soft-amber: #fffbeb;
-      --soft-red: #fef2f2;
-      --shadow: 0 12px 28px rgba(20, 32, 51, .08);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      letter-spacing: 0;
-    }
-
-    button, input, select { font: inherit; }
-
-    .shell {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 268px minmax(0, 1fr);
-    }
-
-    .rail {
-      background: var(--navy);
-      color: white;
-      padding: 22px 18px;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid rgba(255,255,255,.16);
-    }
-
-    .mark {
-      width: 42px;
-      height: 42px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      background: #fff;
-      color: var(--navy);
-      font-weight: 900;
-    }
-
-    .brand strong { display: block; font-size: 16px; }
-    .brand span { display: block; color: #b8c4d6; font-size: 12px; margin-top: 2px; }
-
-    .nav-label {
-      margin: 22px 0 8px;
-      color: #b8c4d6;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .rail-card {
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 8px;
-      padding: 12px;
-      background: rgba(255,255,255,.06);
-      margin-bottom: 10px;
-    }
-
-    .rail-card b { display: block; font-size: 13px; }
-    .rail-card span { display: block; margin-top: 4px; font-size: 12px; color: #cbd5e1; line-height: 1.35; }
-
-    .main { min-width: 0; }
-
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 18px 24px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,.92);
-      backdrop-filter: blur(10px);
-    }
-
-    h1 { margin: 0; font-size: 24px; line-height: 1.1; }
-    .subtle { margin-top: 4px; color: var(--muted); font-size: 13px; }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    .file-wrap, .input-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid var(--line);
-      background: white;
-      border-radius: 8px;
-      padding: 8px 10px;
-      min-height: 42px;
-    }
-
-    .file-wrap input { max-width: 250px; }
-
-    .input-wrap label {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .input-wrap input {
-      width: 76px;
-      border: 0;
-      outline: 0;
-      font-weight: 800;
-      color: var(--ink);
-    }
-
-    .btn {
-      min-height: 42px;
-      border: 0;
-      border-radius: 8px;
-      background: var(--blue);
-      color: white;
-      padding: 0 14px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .btn.secondary {
-      background: white;
-      color: var(--ink);
-      border: 1px solid var(--line);
-    }
-
-    .content { padding: 22px 24px 40px; }
-
-    .notice {
-      border: 1px dashed #b7c4d8;
-      background: #fff;
-      border-radius: 8px;
-      padding: 22px;
-      box-shadow: var(--shadow);
-    }
-
-    .notice h2 { margin: 0; font-size: 20px; }
-    .notice p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
-
-    .status {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--muted);
-    }
-
-    .status.ok { color: var(--green); }
-    .status.err { color: var(--red); }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .kpi {
-      border: 1px solid var(--line);
-      border-left: 4px solid var(--blue);
-      background: white;
-      border-radius: 8px;
-      padding: 14px;
-      box-shadow: var(--shadow);
-      min-height: 102px;
-    }
-
-    .kpi.green { border-left-color: var(--green); }
-    .kpi.cyan { border-left-color: var(--cyan); }
-    .kpi.amber { border-left-color: var(--amber); }
-    .kpi.red { border-left-color: var(--red); }
-
-    .kpi-label {
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-
-    .kpi-value {
-      margin-top: 8px;
-      font-size: 28px;
-      font-weight: 900;
-      line-height: 1;
-    }
-
-    .kpi-note {
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.35;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin: 18px 0;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .tab {
-      border: 1px solid var(--line);
-      border-bottom: 0;
-      background: #eef2f7;
-      color: #475467;
-      border-radius: 8px 8px 0 0;
-      padding: 10px 14px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .tab.active {
-      background: white;
-      color: var(--blue);
-    }
-
-    .panel {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      margin-bottom: 16px;
-      overflow: hidden;
-    }
-
-    .panel-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 12px;
-      padding: 16px;
-      border-bottom: 1px solid var(--line);
-      background: #fbfcfe;
-    }
-
-    .panel-head h2 { margin: 0; font-size: 17px; }
-    .panel-head p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; }
-    th, td { padding: 11px 12px; border-bottom: 1px solid #edf1f6; text-align: left; vertical-align: top; }
-    th {
-      color: var(--muted);
-      background: #fbfcfe;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-weight: 900;
-    }
-    td.num, th.num { text-align: right; }
-    tr:hover td { background: #fbfcfe; }
-
-    .client-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
-      gap: 12px;
-      padding: 16px;
-    }
-
-    .client-card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 14px;
-      background: #fff;
-    }
-
-    .client-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .client-name { font-weight: 900; font-size: 16px; }
-    .client-code { margin-top: 3px; color: var(--muted); font-size: 12px; font-weight: 800; }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: 900;
-      white-space: nowrap;
-      background: #eef2f7;
-      color: #475467;
-    }
-
-    .pill.good { background: var(--soft-green); color: var(--green); }
-    .pill.warn { background: var(--soft-amber); color: var(--amber); }
-    .pill.bad { background: var(--soft-red); color: var(--red); }
-    .pill.info { background: var(--soft-blue); color: var(--blue); }
-
-    .mini-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .mini-stat {
-      background: #f8fafc;
-      border-radius: 8px;
-      padding: 9px;
-    }
-
-    .mini-stat span {
-      display: block;
-      color: var(--muted);
-      font-size: 10px;
-      text-transform: uppercase;
-      font-weight: 900;
-    }
-
-    .mini-stat strong { display: block; margin-top: 3px; font-size: 18px; }
-
-    .team-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-      border-top: 1px solid #edf1f6;
-      padding: 10px 0;
-    }
-
-    .team-row:first-of-type { border-top: 0; }
-
-    .team-title { font-weight: 900; }
-    .team-meta { margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.35; }
-    .team-people { text-align: right; font-size: 20px; font-weight: 900; }
-    .team-people span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; }
-
-    .rate-input {
-      width: 76px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 5px 6px;
-      font-weight: 800;
-      text-align: right;
-      background: white;
-    }
-
-    .placeholder-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      padding: 16px;
-    }
-
-    .placeholder {
-      border: 1px dashed #b7c4d8;
-      border-radius: 8px;
-      padding: 14px;
-      background: #fbfcfe;
-    }
-
-    .placeholder b { display: block; }
-    .placeholder span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.4; }
-
-    .hidden { display: none !important; }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      background: rgba(11,31,58,.62);
-      padding: 20px;
-      z-index: 40;
-    }
-
-    .modal[hidden] { display: none; }
-
-    .modal-card {
-      width: min(1120px, 100%);
-      max-height: 88vh;
-      overflow: hidden;
-      background: white;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 26px 70px rgba(0,0,0,.28);
-    }
-
-    .modal-head {
-      padding: 16px;
-      background: var(--navy);
-      color: white;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .modal-head h2 { margin: 0; font-size: 20px; }
-    .modal-head p { margin: 4px 0 0; color: #cbd5e1; font-size: 13px; }
-    .modal-close {
-      width: 36px;
-      height: 36px;
-      border: 1px solid rgba(255,255,255,.22);
-      background: rgba(255,255,255,.08);
-      color: white;
-      border-radius: 8px;
-      font-size: 22px;
-      cursor: pointer;
-    }
-
-    .modal-body { overflow: auto; }
-
-    @media (max-width: 1100px) {
-      .shell { grid-template-columns: 1fr; }
-      .rail { position: static; height: auto; }
-      .summary-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    @media (max-width: 720px) {
-      .topbar { align-items: flex-start; flex-direction: column; }
-      .actions { justify-content: flex-start; width: 100%; }
-      .summary-grid { grid-template-columns: 1fr; }
-      .content { padding: 16px; }
-      .client-grid { grid-template-columns: 1fr; }
-    }
-
-    @media print {
-      .rail, .actions, .tabs, .btn, .modal { display: none !important; }
-      .shell { display: block; }
-      .topbar { position: static; }
-      .content { padding: 12px; }
-      .panel, .kpi, .client-card { box-shadow: none; break-inside: avoid; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BRI Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f4f2ea;--panel:#ffffff;--surface:#f8f7f3;--ink:#171717;--muted:#5c5b56;--faint:#9e9d97;--line:#e2dfd6;--navy:#10223c;
+  --green:#2d6a0a;--green-bg:#e8f5e0;--blue:#1458a0;--blue-bg:#e8f1fb;
+  --purple:#3c3489;--purple-bg:#eeedfe;--amber:#7a4800;--amber-bg:#fdf0dc;
+  --red:#9b2c2c;--red-bg:#fdf0f0;
+  --font:Manrope,Inter,system-ui,sans-serif;
+  --radius:10px;--radius-sm:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;width:100%;}
+body{font-family:var(--font);font-size:15px;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;line-height:1.5;}
+button,input{font:inherit;}
+
+.shell{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ─────────────────────────────────────────── */
+.rail{width:200px;flex-shrink:0;height:100vh;overflow-y:auto;background:var(--navy);padding:16px 14px;display:flex;flex-direction:column;}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.1);}
+.logo-mark{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-text strong{display:block;font-size:13px;font-weight:600;color:#fff;}
+.logo-text span{display:block;font-size:11px;color:rgba(255,255,255,.5);}
+.nav-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;}
+.scard{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 13px;margin-bottom:8px;}
+.scard .lbl{font-size:11px;color:rgba(255,255,255,.55);display:block;margin-bottom:4px;}
+.scard .val{font-size:26px;font-weight:600;color:#fff;display:block;line-height:1;}
+.scard .val small{font-size:14px;font-weight:400;color:rgba(255,255,255,.6);}
+.scard .sub{font-size:11px;color:rgba(255,255,255,.45);display:block;margin-top:4px;}
+.sdivider{height:1px;background:rgba(255,255,255,.1);margin:10px 0;}
+.stag{font-size:12px;color:rgba(255,255,255,.5);padding:3px 0;display:block;margin-bottom:4px;}
+.stag.warn{background:var(--amber-bg);color:var(--amber);font-weight:600;font-size:12px;padding:5px 9px;border-radius:var(--radius-sm);border:0;}
+.stag.flag{background:var(--red-bg);color:var(--red);font-weight:600;font-size:12px;padding:5px 9px;border-radius:var(--radius-sm);border:0;}
+.stag.muted{color:rgba(255,255,255,.4);font-size:11px;}
+
+/* countdown */
+.countdown{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 13px;margin-bottom:8px;}
+.countdown .lbl{font-size:11px;color:rgba(255,255,255,.55);display:block;margin-bottom:4px;}
+.ctimer{font-size:26px;font-weight:600;color:#fff;display:block;line-height:1;}
+.ctimer.ok{color:#6ee7a0;}
+.ctimer.warn{color:#fcd34d;}
+.ctimer.urgent{color:#fca5a5;}
+.csub{font-size:11px;color:rgba(255,255,255,.45);display:block;margin-top:4px;}
+.ctrack{height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin-top:10px;overflow:hidden;}
+.cfill{height:100%;border-radius:2px;background:#6ee7a0;}
+.cfill.warn{background:#fcd34d;}
+.cfill.urgent{background:#fca5a5;}
+
+.sup-lbl{display:block;font-size:11px;color:rgba(255,255,255,.55);margin-bottom:6px;}
+.file-input-wrap{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 13px;margin-bottom:8px;}
+input[type=file]{font-size:11px;color:rgba(255,255,255,.6);width:100%;cursor:pointer;}
+input[type=file]::file-selector-button{border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:500;cursor:pointer;padding:3px 8px;margin-right:6px;}
+.shrs{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:12px 13px;margin-bottom:8px;}
+.shrs .lbl{font-size:11px;color:rgba(255,255,255,.55);display:block;margin-bottom:4px;}
+.shrs input{border:0;outline:0;background:transparent;color:#fff;font-size:22px;font-weight:600;width:80px;}
+.sstatus{font-size:11px;color:rgba(255,255,255,.5);display:block;margin:4px 0;min-height:16px;}
+.sstatus.ok{color:#6ee7a0;}
+.sstatus.err{color:#fca5a5;font-weight:500;}
+
+/* ── MAIN ────────────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+
+/* topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel);flex-shrink:0;gap:16px;}
+.topbar h1{font-size:18px;font-weight:600;color:var(--ink);margin:0;line-height:1.2;}
+.topbar-sub{font-size:12px;color:var(--faint);margin-top:2px;}
+.view-toggle{display:flex;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;background:var(--panel);}
+.vtb{padding:7px 14px;font-size:13px;font-weight:500;background:transparent;border:0;border-right:1px solid var(--line);cursor:pointer;color:var(--muted);}
+.vtb:last-child{border-right:0;}
+.vtb.active{background:var(--navy);color:#fff;}
+
+/* urgency bar */
+.ubar{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--line);flex-shrink:0;background:var(--panel);display:none;}
+.ucell{padding:12px 20px;border-right:1px solid var(--line);}
+.ucell:last-child{border-right:0;}
+.ulbl{font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.uval{font-size:32px;font-weight:700;line-height:1;}
+.usub{font-size:12px;color:var(--faint);margin-top:3px;}
+.ucell.late .uval{color:var(--red);}
+.ucell.due .uval{color:var(--amber);}
+.ucell.plan .uval{color:var(--blue);}
+
+/* content area */
+.content{flex:1;overflow-y:auto;padding:16px 20px 90px;}
+
+/* empty state */
+.empty{padding:40px;border:2px dashed var(--line);border-radius:var(--radius);background:var(--panel);}
+.empty h2{font-size:20px;font-weight:600;margin-bottom:10px;}
+.empty p{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:14px;}
+.upload-btn-label{display:inline-flex;align-items:center;gap:10px;padding:13px 24px;background:var(--navy);color:#fff;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;font-weight:600;transition:background .15s;}
+.upload-btn-label:hover{background:#1a3a6a;}
+#fileInput2{display:none;}
+.upload-hint{font-size:12px;color:var(--faint);margin-top:12px;display:block;}
+#mainStatus{font-size:13px;font-weight:500;margin-top:10px;min-height:18px;display:block;}
+#mainStatus.ok{color:var(--green);}
+#mainStatus.err{color:var(--red);}
+
+/* unmapped banner */
+.ubanner{display:none;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--red-bg);border:1px solid #f0a0a0;border-radius:var(--radius-sm);margin-bottom:12px;font-size:13px;color:var(--red);line-height:1.5;}
+.ubanner strong{font-weight:600;}
+
+/* efficiency bar */
+.effbar{display:none;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:10px;flex-wrap:wrap;}
+.efflbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.effseg{display:flex;align-items:center;gap:6px;}
+.effdot{width:9px;height:9px;border-radius:2px;}
+.effseg span{font-size:13px;color:var(--muted);}
+.effseg strong{font-size:14px;font-weight:600;color:var(--ink);}
+.effdiv{width:1px;height:18px;background:var(--line);}
+
+/* variance row */
+.varrow{display:none;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:10px;flex-wrap:wrap;}
+.varlbl{font-size:13px;color:var(--muted);}
+.varinput{width:60px;border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:4px 8px;font-size:14px;font-weight:600;text-align:right;outline:0;background:var(--panel);}
+.varinput:focus{border-color:var(--blue);}
+.vargap{font-size:13px;font-weight:600;padding:3px 10px;border-radius:4px;}
+.vargap.over{background:var(--red-bg);color:var(--red);}
+.vargap.under{background:var(--green-bg);color:var(--green);}
+.vargap.zero{background:var(--green-bg);color:var(--green);}
+.varcost{font-size:12px;color:var(--muted);}
+.varcost strong{color:var(--red);font-weight:600;}
+
+/* ── CUSTOMER CARDS ──────────────────────────────────── */
+.cgrid{display:flex;flex-direction:column;gap:10px;}
+.ccard{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.ccard.big{border-color:#ccc9be;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+details.ccard>summary{list-style:none;}
+details.ccard>summary::-webkit-details-marker{display:none;}
+.ctop{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--panel);cursor:pointer;}
+.ctop:hover{background:var(--surface);}
+.ctitle{display:flex;align-items:baseline;gap:8px;}
+.cname{font-size:17px;font-weight:600;color:var(--ink);}
+.ccode{font-size:12px;color:var(--faint);}
+.cmets{display:flex;align-items:center;gap:14px;justify-content:flex-end;}
+.curg{display:flex;flex-direction:column;gap:2px;text-align:right;}
+.cu-late{font-size:12px;font-weight:600;color:var(--red);white-space:nowrap;}
+.met{min-width:44px;text-align:right;}
+.met strong{display:block;font-size:16px;font-weight:600;color:var(--ink);line-height:1.1;}
+.met span{display:block;font-size:11px;color:var(--faint);margin-top:2px;}
+.ppill{display:inline-flex;align-items:center;justify-content:center;min-width:76px;padding:6px 14px;border-radius:20px;background:var(--blue-bg);color:var(--blue);font-size:16px;font-weight:600;white-space:nowrap;flex-shrink:0;}
+.ppill.warn{background:var(--amber-bg);color:var(--amber);}
+.odetbtn{padding:5px 10px;border:1.5px solid var(--line);border-radius:var(--radius-sm);background:var(--panel);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--ink);}
+.odetbtn:hover{background:var(--surface);}
+
+/* card body */
+.cbody{padding:10px 18px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;background:var(--panel);}
+.schips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;}
+.chip{display:inline-flex;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;}
+.chip.alloc{background:var(--green-bg);color:var(--green);}
+.chip.rel{background:var(--blue-bg);color:var(--blue);}
+.chip.part{background:var(--amber-bg);color:var(--amber);}
+.chip.dna{background:var(--red-bg);color:var(--red);}
+.chip.other{background:var(--surface);color:var(--muted);border:1px solid var(--line);}
+
+/* activity rows */
+.arow{display:flex;align-items:center;gap:10px;min-height:30px;}
+.atype{flex:0 0 54px;width:54px;padding:3px 0;border-radius:var(--radius-sm);font-size:11px;font-weight:600;text-align:center;letter-spacing:.02em;}
+.atype.pick{background:var(--green-bg);color:var(--green);}
+.atype.pack{background:var(--blue-bg);color:var(--blue);}
+.atype.admin{background:var(--purple-bg);color:var(--purple);}
+.aname{flex:0 0 260px;width:260px;font-size:13px;color:var(--ink);line-height:1.3;}
+.rflag{display:inline-flex;margin-left:5px;padding:2px 7px;border-radius:4px;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:600;}
+.task-note{font-size:11px;color:var(--faint);white-space:nowrap;padding:0 8px;font-style:italic;}
+.arate{flex:1;font-size:12px;color:var(--muted);}
+.ahrs{flex:0 0 62px;font-size:13px;color:var(--muted);text-align:right;white-space:nowrap;}
+.appl{flex:0 0 42px;font-size:15px;font-weight:600;color:var(--blue);text-align:right;}
+.rinput{width:58px;border:0;border-bottom:1.5px solid var(--line);background:transparent;font-size:12px;text-align:right;outline:0;color:var(--ink);padding:0 2px;}
+.rinput:focus{border-bottom-color:var(--blue);}
+.pbar{height:3px;margin:2px 0 4px 64px;border-radius:2px;overflow:hidden;background:var(--surface);}
+.pbar-fill{height:100%;border-radius:2px;}
+.pbar-fill.pick{background:var(--green);}
+.pbar-fill.pack{background:var(--blue);}
+.pbar-fill.admin{background:var(--purple);}
+.cstate{margin-bottom:4px;}
+.pill{display:inline-flex;padding:3px 9px;border-radius:20px;font-size:12px;background:#eef2f7;color:#475467;}
+.pill.info{background:var(--blue-bg);color:var(--blue);}
+.pill.warn{background:var(--amber-bg);color:var(--amber);}
+.pill.bad{background:var(--red-bg);color:var(--red);}
+.pill.good{background:var(--green-bg);color:var(--green);}
+.proxy-label{color:var(--amber);font-weight:500;}
+.proxy-override{color:var(--green);font-weight:600;}
+.proxy-file{color:var(--amber);font-weight:400;}
+.mandatory-qty-wrap{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;background:var(--red-bg);border-radius:var(--radius-sm);border:1.5px solid #f0a0a0;}
+    .mandatory-qty-lbl{font-size:12px;color:var(--red);font-weight:600;white-space:nowrap;}
+    .mandatory-qty-input{width:100px;border:0;border-bottom:1.5px solid var(--red);background:transparent;color:var(--ink);font-size:14px;font-weight:600;text-align:right;outline:0;padding:0 2px;}
+    .mandatory-qty-input::placeholder{color:#f0a0a0;font-size:12px;}
+    .mandatory-qty-input.filled{border-bottom-color:var(--green);}
+    .proxy-qty-wrap{display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:3px 10px;background:var(--amber-bg);border-radius:var(--radius-sm);border:1px solid #e8c070;}
+.proxy-qty-lbl{font-size:11px;color:var(--amber);font-weight:600;white-space:nowrap;}
+.proxy-qty-input{width:90px;border:0;border-bottom:1.5px solid var(--amber);background:transparent;color:var(--ink);font-size:13px;font-weight:500;text-align:right;outline:0;padding:0 2px;}
+.proxy-qty-input::placeholder{color:var(--faint);font-size:12px;}
+
+/* detail block */
+.dblock{margin-top:10px;border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;}
+.dblock-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface);}
+.dblock-title{font-size:14px;font-weight:600;color:var(--ink);}
+.dblock-note{font-size:12px;color:var(--muted);margin-top:2px;}
+.dtable{width:100%;border-collapse:collapse;font-size:13px;}
+.dtable th,.dtable td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;}
+.dtable th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;background:var(--surface);}
+.dtable tr:last-child td{border-bottom:0;}
+.dtable .num{text-align:right;}
+
+/* pipeline */
+.pstrip{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel);}
+.pstrip table{width:100%;border-collapse:collapse;font-size:13px;}
+.pstrip th{font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);background:var(--surface);text-align:center;}
+.pstrip th:first-child{text-align:left;}
+.pstrip th:last-child{border-right:0;}
+.pstrip td{padding:8px 12px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:center;}
+.pstrip td:first-child{text-align:left;font-size:13px;font-weight:500;white-space:nowrap;}
+.pstrip td:last-child{border-right:0;}
+.pstrip tr:last-child td{border-bottom:0;}
+.pnum{font-size:15px;font-weight:600;color:var(--ink);display:block;}
+.pnum.red{color:var(--red);}
+.pnum.none{color:var(--faint);}
+.pbarbg{height:4px;border-radius:2px;background:var(--surface);margin-top:4px;}
+.pbarfill{height:4px;border-radius:2px;}
+
+/* panels / tables */
+.panel{margin-bottom:14px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.panel-head{padding:14px 18px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.panel-head h2{font-size:16px;font-weight:600;margin:0;color:var(--ink);}
+.panel-head p{font-size:12px;color:var(--muted);margin:3px 0 0;}
+.twrap{overflow-x:auto;}
+table.data{width:100%;border-collapse:collapse;font-size:14px;}
+table.data th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface);text-align:left;}
+table.data td{padding:10px 14px;border-bottom:1px solid var(--line);color:var(--ink);font-size:14px;}
+table.data tr:last-child td{border-bottom:0;}
+table.data tr:hover td{background:var(--surface);}
+table.data .num{text-align:right;}
+
+/* hrs input in unmapped table */
+.hrs-input{width:90px;border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:5px 8px;font-size:14px;font-weight:600;text-align:right;outline:0;background:var(--panel);color:var(--ink);}
+.hrs-input:focus{border-color:var(--blue);background:#f0f7ff;}
+.hrs-input::-webkit-inner-spin-button,.hrs-input::-webkit-outer-spin-button{opacity:1;height:24px;}
+.unm-ppl{font-size:15px;font-weight:600;color:var(--blue);}
+.unm-ppl.zero{color:var(--faint);}
+tfoot tr td{border-top:2px solid var(--line);background:var(--surface);font-weight:600;font-size:14px;padding:10px 14px;}
+tfoot .num{text-align:right;}
+
+/* grand total bar */
+.grand-total-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:12px;padding:16px 20px;background:var(--navy);color:#fff;border-radius:var(--radius);}
+.gtl{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;}
+.gtv{font-size:28px;font-weight:700;color:#fff;}
+.gtsub{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;}
+.grand-total-segs{display:flex;gap:24px;align-items:center;}
+.gt-seg{text-align:right;}
+
+/* sticky footer */
+.rfooter{position:sticky;bottom:0;z-index:5;display:none;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;border-top:none;background:#6C4EAA;flex-wrap:wrap;box-shadow:0 -4px 16px rgba(0,0,0,.15);}
+.rfooter span.lbl{font-size:13px;color:rgba(255,255,255,.7);}
+.fmets{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.fmets span{font-size:13px;color:rgba(255,255,255,.75);}
+.fmets strong{font-size:15px;font-weight:600;color:#fff;}
+.ftotal{padding:7px 20px;border-radius:20px;background:rgba(255,255,255,.2);color:#fff;font-size:17px;font-weight:700;white-space:nowrap;border:1px solid rgba(255,255,255,.3);}
+.tlinput{width:40px;border:0;border-bottom:1.5px solid rgba(255,255,255,.4);background:transparent;color:#fff;font-size:15px;font-weight:600;text-align:right;outline:0;}
+.tlinput::-webkit-inner-spin-button,.tlinput::-webkit-outer-spin-button{opacity:1;filter:invert(1);height:22px;}
+
+/* modal */
+.modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(11,31,58,.6);padding:20px;z-index:40;}
+.modal.open{display:grid;}
+.mcard{width:min(1100px,100%);max-height:88vh;overflow:hidden;background:var(--panel);border-radius:var(--radius);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.mhead{padding:16px 20px;background:var(--navy);color:#fff;display:flex;justify-content:space-between;gap:16px;align-items:flex-start;}
+.mhead h2{margin:0;font-size:18px;font-weight:600;}
+.mhead p{margin:4px 0 0;font-size:12px;color:#94a3b8;}
+.mclose{width:32px;height:32px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;border-radius:var(--radius-sm);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mclose:hover{background:rgba(255,255,255,.2);}
+.mbody{overflow:auto;}
+
+.hidden{display:none!important;}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <aside class="rail">
-      <div class="brand">
-        <div class="mark">BRI</div>
-        <div>
-          <strong>BRI Planner</strong>
-          <span>Outbound labour planning</span>
-        </div>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="rail">
+    <div class="logo">
+      <div class="logo-mark">BRI</div>
+      <div class="logo-text"><strong>Planner</strong><span>Outbound</span></div>
+    </div>
+
+    <div class="nav-label">Today's plan</div>
+    <div class="scard">
+      <span class="lbl">People required (KPI)</span>
+      <span class="val" id="sidePeople">— <small>ppl</small></span>
+      <span class="sub" id="sideHours">No file loaded</span>
+    </div>
+    <div class="scard">
+      <span class="lbl">KPI orders planned</span>
+      <span class="val" id="sideOrders">—</span>
+      <span class="sub" id="sideRows">Upload file to begin</span>
+    </div>
+    <div class="scard">
+      <span class="lbl">Due by</span>
+      <span class="val" id="sideDue" style="font-size:15px;">—</span>
+      <span class="sub">Overdue + next business day</span>
+    </div>
+
+    <div class="sdivider"></div>
+    <div class="nav-label">Agency deadline</div>
+    <div class="countdown">
+      <span class="lbl">Confirm casuals by 4:00 PM</span>
+      <span class="ctimer ok" id="ctimer">—</span>
+      <span class="csub" id="csub">calculating...</span>
+      <div class="ctrack"><div class="cfill" id="cfill" style="width:0%;"></div></div>
+    </div>
+
+
+    <div class="sdivider"></div>
+    <div class="nav-label">Alerts</div>
+    <span class="stag" id="sideReview">No review flags</span>
+    <span class="stag" id="sideUnmapped">All customers mapped</span>
+
+    <div class="sdivider"></div>
+    <div class="nav-label">Upload</div>
+    <div class="file-input-wrap">
+      <span class="sup-lbl">Outstanding orders file</span>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm">
+    </div>
+    <span class="sstatus" id="sstatus"></span>
+
+    <div class="sdivider"></div>
+    <div class="nav-label">Settings</div>
+    <div class="shrs">
+      <span class="lbl">Productive hrs / person</span>
+      <input type="number" id="prodHrs" min="1" max="12" step="0.05" value="6.85">
+    </div>
+
+    <div class="nav-label" style="margin-top:4px;">Inbound</div>
+    <span class="stag">&#9633; Awaiting inbound file</span>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1>Daily resource planner &mdash; <span id="planDate">—</span></h1>
+        <div class="topbar-sub" id="srcText">No file loaded &middot; Upload the outstanding orders xlsx to begin</div>
+      </div>
+      <div class="view-toggle">
+        <button class="vtb active" data-view="roster">Roster</button>
+        <button class="vtb" data-view="pipeline">Pipeline</button>
+        <button class="vtb" data-view="orders">Orders</button>
+      </div>
+    </header>
+
+    <div class="ubar" id="ubar">
+      <div class="ucell late"><div class="ulbl">Overdue — must ship tomorrow</div><div class="uval" id="ubOverdue">—</div><div class="usub" id="ubOverdueSub"></div></div>
+      <div class="ucell due"><div class="ulbl">Due tomorrow</div><div class="uval" id="ubTom">—</div><div class="usub" id="ubTomSub"></div></div>
+      <div class="ucell plan"><div class="ulbl">Total planned workload</div><div class="uval" id="ubTotal">—</div><div class="usub" id="ubTotalSub"></div></div>
+    </div>
+
+    <div class="content">
+
+      <!-- EMPTY STATE -->
+      <div class="empty" id="emptyState">
+        <h2>Upload the daily Outstanding Orders report</h2>
+        <p>Calculates picking, packing, and order-prep headcount for all 7 mapped KPI customers. Use the sidebar file input or the button below.</p>
+        <label class="upload-btn-label" for="fileInput2">&#8679; Choose Outstanding Orders file (.xlsx)</label>
+        <input type="file" id="fileInput2" accept=".xlsx,.xls,.xlsm">
+        <span id="mainStatus"></span>
+        <span class="upload-hint">Mapped: BBW EComm &middot; TBS &middot; Ten Tops &middot; BBW B2B &middot; Makita &middot; Flying Tiger &middot; Joonya</span>
       </div>
 
-      <div class="nav-label">Baseline</div>
-      <div class="rail-card">
-        <b>Productive day</b>
-        <span>6.85 hours per person after morning break and lunch.</span>
-      </div>
-      <div class="rail-card">
-        <b>Included work</b>
-        <span>Open KPI-customer orders. Picked Complete is excluded.</span>
-      </div>
-      <div class="rail-card">
-        <b>Inbound planning</b>
-        <span>Reserved for receipts, putaway, container unloads, and pallet movement when the inbound file is ready.</span>
-      </div>
-    </aside>
+      <!-- DASHBOARD -->
+      <div id="dashboard" class="hidden">
 
-    <main class="main">
-      <header class="topbar">
-        <div>
-          <h1>Daily Resource Planner</h1>
-          <div class="subtle" id="sourceText">No outstanding orders file loaded</div>
-        </div>
-        <div class="actions">
-          <div class="file-wrap">
-            <input id="fileInput" type="file" accept=".xlsx,.xls,.xlsm">
+        <!-- ROSTER VIEW -->
+        <div id="view-roster">
+          
+          <div class="effbar" id="effbar">
+            <span class="efflbl">Workload:</span>
+            <div class="effseg"><div class="effdot" style="background:var(--green);"></div><span>Pick</span><strong id="effPick">—</strong></div>
+            <div class="effdiv"></div>
+            <div class="effseg"><div class="effdot" style="background:var(--blue);"></div><span>Pack</span><strong id="effPack">—</strong></div>
+            <div class="effdiv"></div>
+            <div class="effseg"><div class="effdot" style="background:var(--purple);"></div><span>Admin</span><strong id="effAdmin">—</strong></div>
+            <div class="effdiv"></div>
+            <div class="effseg"><div class="effdot" style="background:var(--faint);"></div><span>Leaders</span><strong id="effLeaders">—</strong></div>
+            <div class="effdiv"></div>
+            <div class="effseg"><span>KPI total</span><strong id="effTotal" style="font-size:14px;color:var(--blue);margin-left:4px;">—</strong></div>
           </div>
-          <div class="input-wrap">
-            <label for="productiveHours">Hours/person</label>
-            <input id="productiveHours" type="number" min="1" max="12" step="0.05" value="6.85">
+          <div class="varrow" id="varrow">
+            <span class="varlbl">Actual rostered:</span>
+            <input class="varinput" type="number" id="actualRostered" min="0" max="100" step="1" placeholder="0">
+            <span class="varlbl">KPI says:</span>
+            <span style="font-size:12px;font-weight:500;color:var(--blue);" id="varKpi">—</span>
+            <span class="vargap" id="vargap"></span>
+            <span class="varcost" id="varcost"></span>
           </div>
-          <button class="btn secondary" type="button" id="resetRates">Reset rates</button>
-          <button class="btn" type="button" onclick="window.print()">Print</button>
-        </div>
-      </header>
-
-      <section class="content">
-        <div class="notice" id="emptyState">
-          <h2>Upload the daily Outstanding Orders report</h2>
-          <p>The planner will calculate picking, packing, and order-prep labour for the customer accounts currently mapped to KPI baselines.</p>
-          <p class="status" id="uploadStatus"></p>
-        </div>
-
-        <div id="dashboard" class="hidden">
-          <section class="summary-grid" id="summaryGrid"></section>
-
-          <div class="tabs">
-            <button class="tab active" type="button" data-tab="outbound">Outbound Supervisor</button>
-            <button class="tab" type="button" data-tab="inbound">Inbound Supervisor</button>
-            <button class="tab" type="button" data-tab="orders">Order Detail</button>
-          </div>
-
-          <section id="tab-outbound">
-            <div class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>Customer Labour Plan</h2>
-                  <p>Picking, packing, and admin/order-prep teams by KPI customer.</p>
-                </div>
-                <span class="status ok" id="includedStatus"></span>
-              </div>
-              <div class="client-grid" id="clientGrid"></div>
-            </div>
-
-            <div class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>Team Summary</h2>
-                  <p>People required by workstream, rounded up for planning.</p>
-                </div>
-              </div>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Team</th>
-                      <th class="num">Hours</th>
-                      <th class="num">People</th>
-                      <th class="num">Rounded</th>
-                      <th>Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody id="teamSummaryRows"></tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-
-          <section id="tab-inbound" class="hidden">
-            <div class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>Inbound Supervisor Workload</h2>
-                  <p>Designed for the next inbound file: receipts, putaway, containers, and pallet movements.</p>
-                </div>
-                <span class="pill warn">Awaiting inbound source file</span>
-              </div>
-              <div class="placeholder-grid">
-                <div class="placeholder">
-                  <b>Receipt / sorting</b>
-                  <span>Not available from the outstanding orders report. Will calculate when the inbound workload file is supplied.</span>
-                </div>
-                <div class="placeholder">
-                  <b>Putaway</b>
-                  <span>Needs receipt/carton/pallet data. Visible now so inbound planning has a home in the app.</span>
-                </div>
-                <div class="placeholder">
-                  <b>Container unloads</b>
-                  <span>Needs container or pallet-count source. Not included in outbound labour totals.</span>
-                </div>
-                <div class="placeholder">
-                  <b>Pallet movement / high reach</b>
-                  <span>Needs task/location data. Not included in current headcount.</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section id="tab-orders" class="hidden">
-            <div class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>Included and Excluded Orders</h2>
-                  <p>Filtered to KPI customers. Picked Complete is excluded from labour but remains visible.</p>
-                </div>
-              </div>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Customer</th>
-                      <th>Order number</th>
-                      <th>Receiver / order name</th>
-                      <th class="num">Lines</th>
-                      <th class="num">Units</th>
-                      <th>Due date</th>
-                      <th>Status</th>
-                      <th>Planning</th>
-                    </tr>
-                  </thead>
-                  <tbody id="orderRows"></tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <div class="modal" id="detailModal" hidden>
-    <section class="modal-card">
-      <div class="modal-head">
-        <div>
-          <h2 id="detailTitle">Customer detail</h2>
-          <p id="detailSubtitle"></p>
-        </div>
-        <button class="modal-close" type="button" id="closeModal">×</button>
-      </div>
-      <div class="modal-body table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Order number</th>
-              <th>Receiver / order name</th>
-              <th class="num">Lines</th>
-              <th class="num">Units</th>
-              <th>Due date</th>
-              <th>Status</th>
-              <th>Planning</th>
-            </tr>
-          </thead>
-          <tbody id="detailRows"></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-
-  <script>
-    const PRODUCTIVE_HOURS_DEFAULT = 6.85;
-    const EXCLUDED_STATUSES = new Set(["picked complete"]);
-    const REVIEW_STATUSES = new Set(["did not allocate", "empty order"]);
-
-    const customers = [
-      {
-        id: "tbs",
-        name: "TBS",
-        codes: ["TBS"],
-        tasks: [
-          { id: "pick", team: "Picking", label: "Pick - Medium line proxy", driver: "lines", baselineRate: 50.9090909091, unit: "lines/hr", source: "TBS KPI: Pick - Medium. Report does not split small/medium/large, so this is a conservative default." },
-          { id: "pack", team: "Packing", label: "Wrap & pack order", driver: "orders", baselineRate: 33.6, unit: "orders/hr", source: "TBS KPI: Order admin fee applied to pack activity." }
-        ]
-      },
-      {
-        id: "makita",
-        name: "Makita",
-        codes: ["MAKAUSSYD"],
-        tasks: [
-          { id: "pick", team: "Picking", label: "Pick line proxy", driver: "lines", baselineRate: 60, unit: "lines/hr", source: "Makita KPI: Pick - Unit. Used as line proxy until carton/unit split is available." },
-          { id: "prep", team: "Order prep / admin", label: "Order print and prep", driver: "orders", baselineRate: 40, unit: "orders/hr", source: "Makita KPI: Order admin fee, print label and prep for pickers." },
-          { id: "pack", team: "Packing", label: "Label and document order", driver: "orders", baselineRate: 33.6, unit: "orders/hr", source: "Makita KPI: Order admin fee applied to picker tasks." }
-        ]
-      },
-      {
-        id: "tentops",
-        name: "Ten Tops",
-        codes: ["TENTSYD-WH"],
-        tasks: [
-          { id: "pick", team: "Picking", label: "Pick fee per carton line proxy", driver: "lines", baselineRate: 150, unit: "lines/hr", source: "Ten Tops KPI: Pick fee per carton. Report has lines, not carton count." },
-          { id: "admin", team: "Order prep / admin", label: "Operational admin", driver: "orders", baselineRate: 7.7538461538, unit: "orders/hr", source: "Ten Tops KPI: Order admin fee / management time." }
-        ]
-      },
-      {
-        id: "flyingtiger",
-        name: "Flying Tiger",
-        codes: ["FLYTSYD-WH-F"],
-        tasks: [
-          { id: "pick", team: "Picking", label: "Pick fee per carton line proxy", driver: "lines", baselineRate: 92, unit: "lines/hr", source: "Flying Tiger KPI: Pick fee per carton. Report has lines, not carton count." }
-        ]
-      },
-      {
-        id: "bbwb2b",
-        name: "BBW B2B",
-        codes: ["AVBBBW"],
-        tasks: [
-          { id: "pick", team: "Picking", label: "Pick - BY LINE", driver: "lines", baselineRate: 23, unit: "lines/hr", source: "BBW B2B KPI: Pick - BY LINE, UOM=Lines." }
-        ]
-      },
-      {
-        id: "bbwecomm",
-        name: "BBW EComm",
-        codes: ["AVRBBW"],
-        tasks: [
-          { id: "pick", team: "Picking", label: "Pick by location line proxy", driver: "lines", baselineRate: 115, unit: "lines/hr", source: "BBW EComm KPI: Pick - by location. Lines used as location proxy." },
-          { id: "pack", team: "Packing", label: "Pack - BY ORDER", driver: "orders", baselineRate: 18, unit: "orders/hr", source: "BBW EComm KPI: Pack - BY ORDER. Pack - BY UNIT is marked DO NOT USE." }
-        ]
-      }
-    ];
-
-    let allOrders = [];
-    let rateOverrides = {};
-    let productiveHours = PRODUCTIVE_HOURS_DEFAULT;
-
-    const fmt = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 0 });
-    const fmt1 = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 1 });
-    const moneyless = value => Number.isFinite(value) ? fmt.format(value) : "0";
-    const clean = value => String(value ?? "").trim();
-    const norm = value => clean(value).toLowerCase().replace(/\s+/g, " ");
-
-    function setStatus(message, tone = "") {
-      const el = document.getElementById("uploadStatus");
-      el.textContent = message;
-      el.className = `status ${tone}`;
-    }
-
-    function normalizeHeader(value) {
-      return clean(value).toLowerCase().replace(/[_./-]+/g, " ").replace(/\s+/g, " ");
-    }
-
-    function findHeaderRow(rows) {
-      for (let i = 0; i < Math.min(rows.length, 30); i++) {
-        const normalized = rows[i].map(normalizeHeader);
-        if (normalized.includes("customer") && normalized.includes("client reference")) {
-          return i;
-        }
-      }
-      return -1;
-    }
-
-    function makeHeaderMap(row) {
-      const map = {};
-      row.forEach((value, index) => {
-        const key = normalizeHeader(value);
-        if (key) map[key] = index;
-      });
-      return map;
-    }
-
-    function pick(row, headers, names) {
-      for (const name of names) {
-        const idx = headers[normalizeHeader(name)];
-        if (idx !== undefined) return row[idx];
-      }
-      return "";
-    }
-
-    function parseNumber(value) {
-      const text = clean(value).replace(/,/g, "");
-      const n = Number(text);
-      return Number.isFinite(n) ? n : 0;
-    }
-
-    function excelDate(value) {
-      if (!value) return "";
-      if (value instanceof Date && !isNaN(value)) return value.toLocaleDateString("en-AU");
-      if (typeof value === "number") {
-        const date = new Date(Math.round((value - 25569) * 86400 * 1000));
-        return date.toLocaleDateString("en-AU");
-      }
-      return clean(value);
-    }
-
-    function customerConfig(code) {
-      return customers.find(customer => customer.codes.includes(code));
-    }
-
-    function parseOrders(rows) {
-      const headerIndex = findHeaderRow(rows);
-      if (headerIndex < 0) {
-        throw new Error("Could not find Customer and Client Reference columns.");
-      }
-
-      const headers = makeHeaderMap(rows[headerIndex]);
-      const parsed = [];
-      for (const row of rows.slice(headerIndex + 1)) {
-        const code = clean(pick(row, headers, ["Customer"]));
-        if (!code) continue;
-        const config = customerConfig(code);
-        if (!config) continue;
-        const status = clean(pick(row, headers, ["Status"])) || "Unspecified";
-        const statusKey = norm(status);
-        const excluded = EXCLUDED_STATUSES.has(statusKey);
-        const review = REVIEW_STATUSES.has(statusKey);
-        parsed.push({
-          customerCode: code,
-          customerId: config.id,
-          customerName: config.name,
-          orderNumber: clean(pick(row, headers, ["Client Reference", "Order Number", "Sales Order"])) || "Unspecified",
-          receiver: clean(pick(row, headers, ["Receiver Name", "Receiver", "Customer Name"])) || "Unspecified",
-          lines: parseNumber(pick(row, headers, ["Order Line Count", "Lines"])),
-          units: parseNumber(pick(row, headers, ["Order Units", "Units", "Qty"])),
-          dueDate: excelDate(pick(row, headers, ["Despatch Due Date", "Due Date"])),
-          status,
-          included: !excluded,
-          review,
-          reason: excluded ? "Excluded: Picked Complete" : review ? "Included: needs review" : "Included"
-        });
-      }
-      return parsed;
-    }
-
-    function groupByCustomer() {
-      return customers.map(config => {
-        const orders = allOrders.filter(order => order.customerId === config.id);
-        const included = orders.filter(order => order.included);
-        const excluded = orders.filter(order => !order.included);
-        return {
-          config,
-          orders,
-          included,
-          excluded,
-          openOrders: included.length,
-          excludedOrders: excluded.length,
-          lines: included.reduce((sum, order) => sum + order.lines, 0),
-          units: included.reduce((sum, order) => sum + order.units, 0),
-          reviewOrders: included.filter(order => order.review).length
-        };
-      });
-    }
-
-    function quantityFor(group, driver) {
-      if (driver === "orders") return group.openOrders;
-      if (driver === "units") return group.units;
-      return group.lines;
-    }
-
-    function taskKey(customerId, taskId) {
-      return `${customerId}:${taskId}`;
-    }
-
-    function rateFor(customerId, task) {
-      return Number(rateOverrides[taskKey(customerId, task.id)] ?? task.baselineRate);
-    }
-
-    function calculate() {
-      const groups = groupByCustomer();
-      const taskRows = [];
-      for (const group of groups) {
-        for (const task of group.config.tasks) {
-          const quantity = quantityFor(group, task.driver);
-          const rate = rateFor(group.config.id, task);
-          const hours = rate > 0 ? quantity / rate : 0;
-          const people = productiveHours > 0 ? hours / productiveHours : 0;
-          taskRows.push({ group, task, quantity, rate, hours, people, rounded: people > 0 ? Math.ceil(people) : 0 });
-        }
-      }
-      return { groups, taskRows };
-    }
-
-    function kpiCard(label, value, note, tone = "") {
-      return `<div class="kpi ${tone}"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div><div class="kpi-note">${note}</div></div>`;
-    }
-
-    function renderSummary(calc) {
-      const included = allOrders.filter(order => order.included);
-      const excluded = allOrders.filter(order => !order.included);
-      const totalLines = included.reduce((sum, order) => sum + order.lines, 0);
-      const totalUnits = included.reduce((sum, order) => sum + order.units, 0);
-      const hours = calc.taskRows.reduce((sum, row) => sum + row.hours, 0);
-      const people = productiveHours ? hours / productiveHours : 0;
-      const teamTotals = teamSummary(calc.taskRows);
-      document.getElementById("summaryGrid").innerHTML = [
-        kpiCard("KPI customers", moneyless(calc.groups.filter(g => g.orders.length).length), `${customers.length} mapped accounts`, "cyan"),
-        kpiCard("Open orders", moneyless(included.length), `${excluded.length} picked-complete excluded`, "blue"),
-        kpiCard("Lines to plan", moneyless(totalLines), `${moneyless(totalUnits)} units shown as reference`, "green"),
-        kpiCard("Labour hours", fmt1.format(hours), `${productiveHours} productive hrs/person`, "amber"),
-        kpiCard("People required", fmt1.format(people), `${Math.ceil(people || 0)} rounded total`, people > 0 ? "red" : ""),
-        kpiCard("Largest team", moneyless(Math.max(...teamTotals.map(row => row.rounded), 0)), `${teamTotals[0]?.team ?? "No work loaded"}`, "cyan")
-      ].join("");
-    }
-
-    function teamSummary(taskRows) {
-      const map = new Map();
-      for (const row of taskRows) {
-        const item = map.get(row.task.team) || { team: row.task.team, hours: 0, people: 0, rounded: 0, notes: [] };
-        item.hours += row.hours;
-        item.people += row.people;
-        item.notes.push(`${row.group.config.name}: ${fmt1.format(row.hours)} hrs`);
-        map.set(row.task.team, item);
-      }
-      return [...map.values()]
-        .map(row => ({ ...row, rounded: row.people > 0 ? Math.ceil(row.people) : 0 }))
-        .sort((a, b) => b.rounded - a.rounded || b.hours - a.hours);
-    }
-
-    function renderTeamSummary(calc) {
-      document.getElementById("teamSummaryRows").innerHTML = teamSummary(calc.taskRows).map(row => `
-        <tr>
-          <td><strong>${row.team}</strong></td>
-          <td class="num">${fmt1.format(row.hours)}</td>
-          <td class="num">${fmt1.format(row.people)}</td>
-          <td class="num"><strong>${row.rounded}</strong></td>
-          <td>${row.notes.slice(0, 4).join(" · ")}${row.notes.length > 4 ? " · ..." : ""}</td>
-        </tr>
-      `).join("");
-    }
-
-    function renderClients(calc) {
-      const taskRowsByCustomer = new Map();
-      calc.taskRows.forEach(row => {
-        const list = taskRowsByCustomer.get(row.group.config.id) || [];
-        list.push(row);
-        taskRowsByCustomer.set(row.group.config.id, list);
-      });
-
-      document.getElementById("clientGrid").innerHTML = calc.groups.map(group => {
-        const rows = taskRowsByCustomer.get(group.config.id) || [];
-        const totalPeople = rows.reduce((sum, row) => sum + row.people, 0);
-        const totalRounded = totalPeople > 0 ? Math.ceil(totalPeople) : 0;
-        return `
-          <article class="client-card">
-            <div class="client-top">
+          <div class="cgrid" id="clientGrid"></div>
+          <div class="panel hidden" id="otherPanel" style="margin-top:16px;">
+            <div class="panel-head">
               <div>
-                <div class="client-name">${group.config.name}</div>
-                <div class="client-code">${group.config.codes.join(", ")}</div>
+                <h2>&#9888; Unmapped customers — labour not counted in KPI total</h2>
+                <p>These customer codes have active orders in the file but no KPI rate set. Enter estimated hours in the last column to include them in the grand total.</p>
               </div>
-              <button class="btn secondary" type="button" onclick="openCustomerDetail('${group.config.id}')">Orders</button>
+              <span id="otherStatus" style="font-size:12px;color:var(--muted);"></span>
             </div>
-            <div class="mini-stats">
-              <div class="mini-stat"><span>Open</span><strong>${moneyless(group.openOrders)}</strong></div>
-              <div class="mini-stat"><span>Lines</span><strong>${moneyless(group.lines)}</strong></div>
-              <div class="mini-stat"><span>People</span><strong>${totalRounded}</strong></div>
+            <div class="twrap">
+              <table class="data" id="otherTable">
+                <thead>
+                  <tr>
+                    <th>Customer code</th>
+                    <th class="num">Orders</th>
+                    <th class="num">Lines</th>
+                    <th class="num">Units</th>
+                    <th class="num">Future due</th>
+                    <th style="width:140px;text-align:center;">Est. hrs needed</th>
+                    <th class="num">People needed</th>
+                  </tr>
+                </thead>
+                <tbody id="otherRows"></tbody>
+                <tfoot id="otherFoot"></tfoot>
+              </table>
             </div>
-            ${group.reviewOrders ? `<div class="pill warn">${group.reviewOrders} needs review</div>` : `<div class="pill good">Ready to plan</div>`}
-            ${rows.map(row => taskRowHtml(row)).join("")}
-          </article>
-        `;
-      }).join("");
-    }
-
-    function taskRowHtml(row) {
-      const key = taskKey(row.group.config.id, row.task.id);
-      return `
-        <div class="team-row">
-          <div>
-            <div class="team-title">${row.task.team}: ${row.task.label}</div>
-            <div class="team-meta">
-              ${moneyless(row.quantity)} ${row.task.driver} ÷
-              <input class="rate-input" type="number" min="0.1" step="0.1" value="${fmtInput(row.rate)}" data-rate-key="${key}">
-              ${row.task.unit} = ${fmt1.format(row.hours)} hrs
-            </div>
-            <div class="team-meta">${row.task.source}</div>
           </div>
-          <div class="team-people">${row.rounded}<span>${fmt1.format(row.people)} ppl</span></div>
+          <div class="grand-total-row hidden" id="grandTotalRow" style="display:none;margin-top:10px;"></div>
+          <div class="panel hidden" id="teamPanel" style="margin-top:12px;">
+            <div class="panel-head"><div><h2>Team summary</h2><p>People by workstream across all customers.</p></div></div>
+            <div class="twrap"><table class="data"><thead><tr><th>Team</th><th class="num">Hours</th><th class="num">People</th><th class="num">Rounded</th><th>Notes</th></tr></thead><tbody id="teamRows"></tbody></table></div>
+          </div>
+          <div class="rfooter" id="rfooter">
+            <span class="lbl">Total across all KPI customers</span>
+            <div class="fmets" id="fmets"></div>
+            <div class="ftotal" id="ftotal">—</div>
+          </div>
         </div>
-      `;
-    }
 
-    function fmtInput(value) {
-      return Number(value.toFixed(3));
-    }
+        <!-- PIPELINE VIEW -->
+        <div id="view-pipeline" class="hidden">
+          <div style="font-size:9px;font-weight:500;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">5-day order pipeline</div>
+          <div id="pipeContent"></div>
+        </div>
 
-    function renderOrders() {
-      const sorted = [...allOrders].sort((a, b) => a.customerName.localeCompare(b.customerName) || Number(b.included) - Number(a.included));
-      document.getElementById("orderRows").innerHTML = sorted.map(order => orderRowHtml(order, true)).join("");
-    }
+        <!-- ORDERS VIEW -->
+        <div id="view-orders" class="hidden">
+          <div class="panel">
+            <div class="panel-head"><div><h2>All orders</h2><p>Every row from the file.</p></div></div>
+            <div class="twrap"><table class="data"><thead><tr><th>Customer</th><th>Order</th><th>Receiver</th><th class="num">Lines</th><th class="num">Units</th><th>Due</th><th>Status</th><th>Planning</th></tr></thead><tbody id="orderRows"></tbody></table></div>
+          </div>
+        </div>
 
-    function orderRowHtml(order, includeCustomer = false) {
-      const tone = !order.included ? "bad" : order.review ? "warn" : "good";
-      return `
-        <tr>
-          ${includeCustomer ? `<td><strong>${order.customerName}</strong><br><span class="subtle">${order.customerCode}</span></td>` : ""}
-          <td>${escapeHtml(order.orderNumber)}</td>
-          <td>${escapeHtml(order.receiver)}</td>
-          <td class="num">${moneyless(order.lines)}</td>
-          <td class="num">${moneyless(order.units)}</td>
-          <td>${escapeHtml(order.dueDate || "-")}</td>
-          <td>${escapeHtml(order.status)}</td>
-          <td><span class="pill ${tone}">${order.reason}</span></td>
-        </tr>
-      `;
-    }
+      </div>
+    </div>
+  </main>
+</div>
 
-    function escapeHtml(value) {
-      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
-    }
+<!-- MODAL -->
+<div class="modal" id="detailModal">
+  <div class="mcard">
+    <div class="mhead">
+      <div><h2 id="mTitle">Detail</h2><p id="mSub"></p></div>
+      <button class="mclose" id="mClose">&times;</button>
+    </div>
+    <div class="mbody twrap">
+      <table class="data"><thead><tr><th>Order</th><th>Receiver</th><th class="num">Lines</th><th class="num">Units</th><th>Due</th><th>Status</th><th>Planning</th></tr></thead><tbody id="mRows"></tbody></table>
+    </div>
+  </div>
+</div>
 
-    function openCustomerDetail(customerId) {
-      const group = groupByCustomer().find(item => item.config.id === customerId);
-      if (!group) return;
-      document.getElementById("detailTitle").textContent = group.config.name;
-      document.getElementById("detailSubtitle").textContent = `${group.openOrders} open orders · ${moneyless(group.lines)} lines · ${group.excludedOrders} picked-complete excluded`;
-      document.getElementById("detailRows").innerHTML = group.orders.map(order => orderRowHtml(order, false)).join("");
-      document.getElementById("detailModal").hidden = false;
-    }
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────
+var PROD_HRS_DEFAULT = 6.85;
+var WARN_THRESHOLD   = 2.0;
+var TT_CTN_DIVISOR   = 18;
+var CASUAL_RATE      = 35;
+var DEADLINE_HOUR    = 16;
+var EXCL = {"picked complete":1};
+var REVIEW = {"did not allocate":1,"empty order":1};
 
-    function closeModal() {
-      document.getElementById("detailModal").hidden = true;
-    }
+var CUSTOMERS = [
+  {id:"bbwecomm",name:"BBW EComm",codes:["AVRBBW"],tasks:[
+    {id:"pick",team:"EComm pick",label:"Fulfilment pick by line",driver:"lines",rate:115,unit:"lines/hr"}
+  ]},
+  {id:"tbs",name:"TBS",codes:["TBS"],tasks:[
+    {id:"pick",team:"Picking",label:"Pick - medium line proxy",driver:"lines",rate:50.909,unit:"lines/hr"},
+    {id:"pack",team:"Packing",label:"Wrap & pack order",driver:"orders",rate:33.6,unit:"orders/hr"}
+  ]},
+  {id:"tentops",name:"Ten Tops",codes:["TENTSYD-WH"],tasks:[
+    {id:"wave",team:"High reach / wave",label:"TRN batch/wave pull-down",driver:"waveTasks",scope:"trn",rate:22,unit:"lines/hr",fixedPpl:2,fixedUnit:"drivers"},
+    {id:"build",team:"Pack / store build",label:"Build TRN cartons to store/order",driver:"manualEntry",scope:"trn",rate:150,unit:"cartons/hr",note:"150 ctns/hr store build",mandatory:true,mandatoryLabel:"Total cartons to build"},
+    {id:"admin",team:"Admin",label:"Operational admin",driver:"orders",rate:7.754,unit:"orders/hr"}
+  ]},
+  {id:"bbwb2b",name:"BBW B2B",codes:["AVBBBW"],tasks:[
+    {id:"pick",team:"Picking",label:"Pick by line",driver:"lines",rate:23,unit:"lines/hr"}
+  ]},
+  {id:"makita",name:"Makita",codes:["MAKAUSSYD"],tasks:[
+    {id:"batch",team:"High reach / batch",label:"Batch pick to pallets",driver:"units",rate:20,unit:"units/hr"},
+    {id:"pack",team:"Pack station",label:"Pack station",driver:"units",rate:120,unit:"units/hr"},
+    {id:"labels",team:"Admin",label:"Labels",driver:"orders",rate:30,unit:"orders/hr"},
+    {id:"wrap",team:"Pallet wrap",label:"Stretch wrap pallets",driver:"estPallets",rate:15,unit:"pallets/hr"}
+  ]},
+  {id:"flying",name:"Flying Tiger",codes:["FLYTSYD-WH-F"],tasks:[
+    {id:"prepick", team:"High reach", label:"Pre-Pick — pull pallets to floor (high reach)", driver:"lines", rate:24, unit:"pallets/hr", note:"1 pallet/2.5 min · 1 pull-down per line"},
+    {id:"pick",    team:"Picking",    label:"Pick — carton from pick face",                  driver:"lines", rate:92, unit:"ctns/hr",    note:"1 ctn/40 sec", proxyWarning:true, manualQtyLabel:"Actual cartons"},
+    {id:"postpick",team:"High reach", label:"Post-Pick — return pallets to racking (high reach)", driver:"lines", rate:24, unit:"pallets/hr", note:"1 pallet/2.5 min · mirrors Pre-Pick"}
+  ]}
+];
 
-    function render() {
-      productiveHours = parseNumber(document.getElementById("productiveHours").value) || PRODUCTIVE_HOURS_DEFAULT;
-      const calc = calculate();
-      renderSummary(calc);
-      renderClients(calc);
-      renderTeamSummary(calc);
-      renderOrders();
-      document.getElementById("includedStatus").textContent = `${allOrders.filter(o => o.included).length} included orders from ${allOrders.length} KPI-customer rows`;
-      document.querySelectorAll(".rate-input").forEach(input => {
-        input.addEventListener("input", event => {
-          rateOverrides[event.target.dataset.rateKey] = parseNumber(event.target.value);
-          render();
-        });
-      });
-    }
+// ── STATE ────────────────────────────────────────────────────────
+var allOrders = [];
+var rateOv    = {};
+var qtyOv     = {};  // manual quantity overrides keyed by cid:taskid
+var prodHrs   = PROD_HRS_DEFAULT;
+var tlCount   = 5;
+var curView   = "roster";
 
-    async function handleFile(event) {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
-      setStatus("Reading workbook...");
-      try {
-        const buffer = await file.arrayBuffer();
-        const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
-        let best = null;
-        for (const sheetName of workbook.SheetNames) {
-          const sheet = workbook.Sheets[sheetName];
-          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-          const headerIndex = findHeaderRow(rows);
-          if (headerIndex >= 0) {
-            const parsed = parseOrders(rows);
-            if (!best || parsed.length > best.orders.length) best = { sheetName, orders: parsed };
-          }
-        }
-        if (!best) throw new Error("No usable outstanding orders sheet found.");
-        allOrders = best.orders;
-        document.getElementById("sourceText").textContent = `${file.name} · ${best.sheetName} · ${allOrders.length} KPI-customer rows`;
-        document.getElementById("emptyState").classList.add("hidden");
-        document.getElementById("dashboard").classList.remove("hidden");
-        setStatus(`Loaded ${allOrders.length} KPI-customer rows`, "ok");
-        render();
-      } catch (error) {
-        console.error(error);
-        setStatus(error.message || "Could not read workbook", "err");
+// ── FORMATTERS ───────────────────────────────────────────────────
+var f0  = new Intl.NumberFormat("en-AU",{maximumFractionDigits:0});
+var f1  = new Intl.NumberFormat("en-AU",{maximumFractionDigits:1});
+var fMo = new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",maximumFractionDigits:0});
+
+function n0(v){return Number.isFinite(v)?f0.format(v):"0";}
+function n1(v){return Number.isFinite(v)?f1.format(v):"0";}
+function cl(v){return String(v==null?"":v).trim();}
+function nm(v){return cl(v).toLowerCase().replace(/\s+/g," ");}
+function ct(v){return Number.isFinite(v)&&v>0?Math.ceil((v-0.000001)*10)/10:0;}
+function pn(v){var t=cl(v).replace(/,/g,"");var n=Number(t);return Number.isFinite(n)?n:0;}
+
+function esc(v){
+  var s=String(v==null?"":v);
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+// ── DATES ────────────────────────────────────────────────────────
+function sod(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+function addD(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;}
+function isWD(d){return d.getDay()!==0&&d.getDay()!==6;}
+function nextBD(from){
+  var d=addD(sod(from||new Date()),1);
+  while(!isWD(d))d=addD(d,1);
+  return d;
+}
+function parseDue(v){
+  if(!v)return null;
+  if(v instanceof Date&&!isNaN(v))return sod(v);
+  if(typeof v==="number")return sod(new Date(Math.round((v-25569)*86400000)));
+  var t=cl(v);
+  var au=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if(au){var yr=Number(au[3].length===2?"20"+au[3]:au[3]);return sod(new Date(yr,Number(au[2])-1,Number(au[1])));}
+  var iso=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(iso)return sod(new Date(Number(iso[1]),Number(iso[2])-1,Number(iso[3])));
+  return null;
+}
+function fmtDate(v){var d=parseDue(v);return d?d.toLocaleDateString("en-AU"):cl(v);}
+
+// ── STATUS ───────────────────────────────────────────────────────
+function setStatus(msg,tone){
+  var els=["sstatus","mainStatus"];
+  els.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){el.textContent=msg;el.className=(id==="sstatus"?"sstatus ":"")+(tone||"");}
+  });
+}
+
+// ── COUNTDOWN ────────────────────────────────────────────────────
+function updateClock(){
+  var now=new Date();
+  var dl=new Date(now.getFullYear(),now.getMonth(),now.getDate(),DEADLINE_HOUR,0,0);
+  var diff=dl-now;
+  var tel=document.getElementById("ctimer");
+  var sel=document.getElementById("csub");
+  var fel=document.getElementById("cfill");
+  if(diff<=0){
+    tel.textContent="Deadline passed";tel.className="ctimer urgent";
+    sel.textContent="Contact agency directly";
+    if(fel)fel.style.width="100%";
+    if(fel)fel.className="cfill urgent";
+    return;
+  }
+  var total=DEADLINE_HOUR*3600000;
+  var pct=Math.min(100,(total-diff)/total*100);
+  var hrs=Math.floor(diff/3600000);
+  var mins=Math.floor((diff%3600000)/60000);
+  tel.textContent=hrs>0?hrs+"h "+mins+"m":mins+"m";
+  sel.textContent="Deadline 4:00 PM · "+(hrs>0?hrs+"h "+mins+"m":mins+"m")+" remaining";
+  var tone=diff<30*60000?"urgent":diff<90*60000?"warn":"ok";
+  tel.className="ctimer "+tone;
+  if(fel){fel.style.width=pct+"%";fel.className="cfill "+tone;}
+}
+
+// ── PARSING ──────────────────────────────────────────────────────
+function normHdr(v){return cl(v).toLowerCase().replace(/[_.\/-]+/g," ").replace(/\s+/g," ");}
+
+function findHdrRow(rows){
+  for(var i=0;i<Math.min(rows.length,10);i++){
+    var n=rows[i].map(function(v){return normHdr(String(v==null?"":v));});
+    if(n.indexOf("customer")>=0&&n.indexOf("client reference")>=0)return i;
+  }
+  return -1;
+}
+
+function hdrMap(row){
+  var m={};
+  row.forEach(function(v,i){var k=normHdr(String(v==null?"":v));if(k)m[k]=i;});
+  return m;
+}
+
+function pcol(row,hdrs,names){
+  for(var i=0;i<names.length;i++){var k=normHdr(names[i]);if(k in hdrs)return row[hdrs[k]];}
+  return "";
+}
+
+function custCfg(code){
+  for(var i=0;i<CUSTOMERS.length;i++){
+    if(CUSTOMERS[i].codes.indexOf(code)>=0)return CUSTOMERS[i];
+  }
+  return null;
+}
+
+function parseOrders(rows){
+  var hi=findHdrRow(rows);
+  if(hi<0)throw new Error("Header row not found. Expected columns: Customer, Client Reference.");
+  var hdrs=hdrMap(rows[hi]);
+  var cutoff=nextBD();
+  var today=sod(new Date());
+  var out=[];
+  for(var i=hi+1;i<rows.length;i++){
+    var row=rows[i];
+    var code=cl(pcol(row,hdrs,["Customer"]));
+    if(!code)continue;
+    var cfg=custCfg(code);
+    var status=cl(pcol(row,hdrs,["Status"]))||"Unspecified";
+    var sk=nm(status);
+    var excl=!!EXCL[sk];
+    var rev=!!REVIEW[sk];
+    var dueRaw=pcol(row,hdrs,["Despatch Due Date","Due Date"]);
+    var dueDt=parseDue(dueRaw);
+    var noDue=!dueDt;
+    var inWin=noDue||(dueDt&&dueDt<=cutoff);
+    var futDue=!excl&&dueDt&&!inWin;
+    var incl=!excl&&!!inWin;
+    var ovd=incl&&dueDt&&dueDt<today;
+    out.push({
+      code:code,cid:cfg?cfg.id:"",cname:cfg?cfg.name:code,mapped:!!cfg,
+      order:cl(pcol(row,hdrs,["Client Reference","Order Number"]))||"Unspecified",
+      recv:cl(pcol(row,hdrs,["Receiver Name","Receiver"]))||"Unspecified",
+      lines:pn(pcol(row,hdrs,["Order Line Count","Lines"])),
+      units:pn(pcol(row,hdrs,["Order Units","Units"])),
+      dueStr:fmtDate(dueRaw),dueDt:dueDt,status:status,
+      incl:incl,futDue:!!futDue,noDue:noDue,rev:rev,ovd:!!ovd,
+      reason:excl?"Excluded: Picked Complete":noDue?"Planned (no due date)":futDue?"Future due":rev?"Needs review":"Planned"
+    });
+  }
+  return out;
+}
+
+// ── GROUPING ─────────────────────────────────────────────────────
+function groups(){
+  return CUSTOMERS.map(function(cfg){
+    var orders=allOrders.filter(function(o){return o.cid===cfg.id;});
+    var incl=orders.filter(function(o){return o.incl;});
+    var excl=orders.filter(function(o){return !o.incl;});
+    var trn=incl.filter(function(o){return o.order.toUpperCase().indexOf("TRN")===0;});
+    var ntrn=incl.filter(function(o){return o.order.toUpperCase().indexOf("TRN")!==0;});
+    var sm={};
+    incl.forEach(function(o){var k=nm(o.status);sm[k]=(sm[k]||0)+1;});
+    return{
+      cfg:cfg,orders:orders,incl:incl,excl:excl,trn:trn,ntrn:ntrn,
+      open:incl.length,
+      fut:excl.filter(function(o){return o.futDue;}).length,
+      picked:excl.filter(function(o){return !!EXCL[nm(o.status)];}).length,
+      lines:incl.reduce(function(s,o){return s+o.lines;},0),
+      units:incl.reduce(function(s,o){return s+o.units;},0),
+      estPallets:Math.ceil(incl.length/5),
+      trnOrd:trn.length,
+      trnLines:trn.reduce(function(s,o){return s+o.lines;},0),
+      trnUnits:trn.reduce(function(s,o){return s+o.units;},0),
+      trnWave:trn.reduce(function(s,o){return s+o.lines;},0)/3,
+      trnCtns:trn.reduce(function(s,o){return s+Math.ceil((o.units||0)/TT_CTN_DIVISOR);},0),
+      revOrd:incl.filter(function(o){return o.rev;}).length,
+      ovdOrd:incl.filter(function(o){return o.ovd;}).length,
+      sm:sm
+    };
+  });
+}
+
+function qty(g,task){
+  var ovKey=g.cfg.id+":"+task.id+":qty";
+  // manualEntry tasks ONLY use the override - return 0 until operator enters value
+  if(task.driver==="manualEntry") return (ovKey in qtyOv && qtyOv[ovKey]>0) ? qtyOv[ovKey] : 0;
+  // Other tasks check override first
+  if(ovKey in qtyOv && qtyOv[ovKey]>0) return qtyOv[ovKey];
+  var trn=task.scope==="trn";
+  if(task.driver==="orders")return trn?g.trnOrd:g.open;
+  if(task.driver==="units")return trn?g.trnUnits:g.units;
+  if(task.driver==="estPallets")return g.estPallets;
+  if(task.driver==="waveTasks")return trn?g.trnWave:0;
+  if(task.driver==="estCartons")return trn?g.trnCtns:0;
+  return trn?g.trnLines:g.lines;
+}
+
+function drvLabel(task){
+  if(task.driver==="waveTasks")return"tasks";
+  if(task.driver==="manualEntry")return task.unit||"units";
+  if(task.driver==="estCartons")return task.scope==="trn"?"TRN est ctns":"est ctns";
+  if(task.driver==="estPallets")return"est pallets";
+  if(task.scope==="trn")return"TRN "+task.driver;
+  return task.driver;
+}
+
+function rateFor(cid,task){
+  var k=cid+":"+task.id;
+  return Number(k in rateOv?rateOv[k]:task.rate);
+}
+
+function calc(){
+  var gs=groups();
+  var rows=[];
+  gs.forEach(function(g){
+    g.cfg.tasks.forEach(function(task){
+      var q=qty(g,task);
+      var r=rateFor(g.cfg.id,task);
+      var hrs=r>0?q/r:0;
+      var ppl=prodHrs>0?hrs/prodHrs:0;
+      rows.push({g:g,task:task,q:q,r:r,hrs:hrs,ppl:ppl});
+    });
+  });
+  return{gs:gs,rows:rows};
+}
+
+function kind(task){
+  var t=(task.team+" "+task.label).toLowerCase();
+  if(t.indexOf("pack")>=0||t.indexOf("wrap")>=0||t.indexOf("build")>=0)return"pack";
+  if(t.indexOf("admin")>=0||t.indexOf("label")>=0||t.indexOf("processing")>=0)return"admin";
+  return"pick";
+}
+
+function totals(c){
+  var t={wh:0,ph:0,pkh:0,pakh:0,adh:0,pkp:0,pakp:0,adp:0};
+  c.rows.forEach(function(row){
+    t.wh+=row.hrs;
+    var k=kind(row.task);
+    if(k==="pick"){t.pkh+=row.hrs;t.pkp+=row.ppl;}
+    else if(k==="pack"){t.pakh+=row.hrs;t.pakp+=row.ppl;}
+    else{t.adh+=row.hrs;t.adp+=row.ppl;}
+  });
+  t.lh=tlCount*prodHrs;
+  t.th=t.wh+t.lh;
+  t.tp=prodHrs?t.th/prodHrs:0;
+  return t;
+}
+
+// ── RENDER SIDEBAR ───────────────────────────────────────────────
+function renderSidebar(c){
+  var t=totals(c);
+  var cutoff=nextBD();
+  var mapped=allOrders.filter(function(o){return o.mapped;});
+  var inclM=mapped.filter(function(o){return o.incl;});
+  document.getElementById("sidePeople").innerHTML=n1(ct(t.tp))+" <small>ppl</small>";
+  document.getElementById("sideHours").textContent=n1(t.th)+" labour hrs";
+  document.getElementById("sideOrders").textContent=n0(inclM.length);
+  document.getElementById("sideRows").textContent="of "+n0(mapped.length)+" KPI rows";
+  document.getElementById("sideDue").textContent=cutoff.toLocaleDateString("en-AU");
+  var revCt=c.gs.reduce(function(s,g){return s+g.revOrd;},0);
+  var rel=document.getElementById("sideReview");
+  if(revCt>0){rel.textContent="⚠ "+revCt+" orders need review";rel.className="stag flag";}
+  else{rel.textContent="No review flags";rel.className="stag";}
+  var unm=allOrders.filter(function(o){return !o.mapped&&o.incl;});
+  var ucodes=[...new Set(unm.map(function(o){return o.code;}))];
+  var uel=document.getElementById("sideUnmapped");
+  if(ucodes.length){uel.textContent="⚠ "+ucodes.length+" codes not mapped";uel.className="stag warn";}
+  else{uel.textContent="All customers mapped";uel.className="stag";}
+}
+
+// ── RENDER URGENCY BAR ───────────────────────────────────────────
+function renderUbar(){
+  var today=sod(new Date());
+  var tom=nextBD();
+  var active=allOrders.filter(function(o){return o.incl;});
+  var ovd=active.filter(function(o){return o.ovd;});
+  var ub=document.getElementById("ubar");
+  if(ub)ub.style.display="grid";
+  document.getElementById("ubOverdue").textContent=n0(ovd.length);
+  document.getElementById("ubOverdueSub").textContent="orders past despatch due date";
+  document.getElementById("ubTom").textContent=n0(active.length-ovd.length);
+  document.getElementById("ubTomSub").textContent="orders due "+tom.toLocaleDateString("en-AU");
+  document.getElementById("ubTotal").textContent=n0(active.length);
+}
+
+// ── RENDER EFF BAR ───────────────────────────────────────────────
+function renderEff(c){
+  var t=totals(c);
+  var eb=document.getElementById("effbar");
+  if(eb)eb.style.display="flex";
+  document.getElementById("effPick").textContent=n1(ct(t.pkp))+" ppl";
+  document.getElementById("effPack").textContent=n1(ct(t.pakp))+" ppl";
+  document.getElementById("effAdmin").textContent=n1(ct(t.adp))+" ppl";
+  document.getElementById("effLeaders").textContent=tlCount+" ppl";
+  document.getElementById("effTotal").textContent=n1(ct(t.tp))+" ppl";
+  var vr=document.getElementById("varrow");
+  if(vr)vr.style.display="flex";
+  document.getElementById("varKpi").textContent=n1(ct(t.tp))+" ppl";
+  var actual=pn(document.getElementById("actualRostered").value);
+  var ge=document.getElementById("vargap");
+  var ce=document.getElementById("varcost");
+  if(actual>0){
+    var gap=actual-ct(t.tp);
+    if(gap>0.05){ge.textContent="▲ "+n1(gap)+" over plan";ge.className="vargap over";ce.innerHTML="<strong>"+fMo.format(Math.abs(gap)*prodHrs*CASUAL_RATE)+"/day excess</strong> · "+fMo.format(Math.abs(gap)*prodHrs*CASUAL_RATE*250)+"/yr";}
+    else if(gap<-0.05){ge.textContent="▼ "+n1(Math.abs(gap))+" under plan";ge.className="vargap under";ce.textContent="Under-rostered";}
+    else{ge.textContent="✓ On plan";ge.className="vargap zero";ce.textContent="";}
+  }else{ge.textContent="";ge.className="vargap";ce.textContent="Enter actual rostered count to track variance";}
+  document.getElementById("ubTotalSub").textContent="orders · "+n1(t.th)+" hrs · "+n1(ct(t.tp))+" ppl";
+}
+
+// ── RENDER UNMAPPED ──────────────────────────────────────────────
+function renderUnmapped(){
+  var unm=allOrders.filter(function(o){return !o.mapped&&o.incl;});
+  var bn=document.getElementById("ubanner");
+  if(!unm.length){bn.style.display="none";return;}
+  var byCode={};
+  unm.forEach(function(o){if(!byCode[o.code])byCode[o.code]={orders:0,lines:0};byCode[o.code].orders++;byCode[o.code].lines+=o.lines;});
+  var parts=Object.keys(byCode).sort(function(a,b){return byCode[b].lines-byCode[a].lines;}).map(function(code){return code+" ("+n0(byCode[code].orders)+" orders, "+n0(byCode[code].lines)+" lines)";}).join(" · ");
+  document.getElementById("ubannerText").innerHTML="<strong>"+Object.keys(byCode).length+" customer code(s) not mapped — labour NOT counted:</strong> "+parts;
+  bn.style.display="flex";
+}
+
+// ── RENDER CLIENTS ───────────────────────────────────────────────
+function renderClients(c){
+  var byC={};
+  c.rows.forEach(function(row){var id=row.g.cfg.id;if(!byC[id])byC[id]=[];byC[id].push(row);});
+  var html="";
+  c.gs.forEach(function(g){
+    var rows=byC[g.cfg.id]||[];
+    var tPpl=rows.reduce(function(s,r){return s+r.ppl;},0);
+    var tHrs=rows.reduce(function(s,r){return s+r.hrs;},0);
+    var warn=tPpl>WARN_THRESHOLD;
+    var isBig=g.open>=50||g.lines>=500;
+    // stats
+    var ords=g.open,lns=g.lines,uts=g.units;
+    var oLbl="Open",lLbl="Lines",uLbl="Units ref";
+    if(g.cfg.id==="tentops"){ords=g.trnOrd;lns=g.trnLines;uts=g.trnUnits;oLbl="TRN open";lLbl="TRN lines";uLbl="TRN units";}
+    var urgHtml=g.ovdOrd>0?"<div class=\"curg\"><span class=\"cu-late\">▲ "+n0(g.ovdOrd)+" overdue</span></div>":"";
+    // status chips — show exact WMS status text
+    var sm=g.sm;var chips="";
+    var statusOrder=["allocated","released","part allocated","part released","part picked","did not allocate","created externally","unspecified"];
+    // Sort: known statuses first in order, then anything else alphabetically
+    var allStatuses=Object.keys(sm);
+    var ordered=statusOrder.filter(function(s){return sm[s];});
+    var extras=allStatuses.filter(function(s){return statusOrder.indexOf(s)<0&&sm[s];}).sort();
+    ordered.concat(extras).forEach(function(sk){
+      var count=sm[sk];
+      if(!count)return;
+      // Pick colour class based on status type
+      var cls="other";
+      if(sk==="allocated")cls="alloc";
+      else if(sk==="released")cls="rel";
+      else if(sk.indexOf("part")===0)cls="part";
+      else if(sk==="did not allocate")cls="dna";
+      // Capitalise first letter of each word for display
+      var label=sk.replace(/\b\w/g,function(c){return c.toUpperCase();});
+      chips+="<span class=\"chip "+cls+"\">"+n0(count)+" "+label+"</span>";
+    });
+    var chipsHtml=chips?"<div class=\"schips\">"+chips+"</div>":"";
+    var scopePill=g.cfg.id==="tentops"?"<div class=\"cstate\"><span class=\"pill info\">TRN scope · "+g.ntrn.length+" non-TRN shown below</span></div>":"";
+    // activity rows
+    var actHtml="";
+    rows.forEach(function(row,idx){
+      var k=kind(row.task);
+      var kLbl=k==="pick"?"Pick":k==="pack"?"Pack":"Admin";
+      var pct=tHrs>0?Math.max(3,Math.min(100,row.hrs/tHrs*100)):0;
+      var flag=idx===0&&g.revOrd?"<span class=\"rflag\">"+g.revOrd+" review</span>":"";
+      var proxyFlag=row.task.proxyWarning?"<span class=\"proxy-flag\">&#9888; proxy rate</span>":"";
+      var qKey=g.cfg.id+":"+row.task.id+":qty";
+      var hasManualQty=qtyOv[qKey]&&qtyOv[qKey]>0;
+      var fileQty=row.task.driver==="lines"?g.lines:row.task.driver==="orders"?g.open:g.units;
+      var qText=row.task.driver==="waveTasks"?n0(g.trnLines)+" TRN lines ("+n1(row.q)+" tasks)":row.task.driver==="estCartons"?n0(row.q)+" "+drvLabel(row.task):row.task.driver==="estPallets"?n0(row.q)+" est pallets ("+n0(g.open)+"/5)":row.task.driver==="lines"&&g.cfg.id==="bbwecomm"?n0(g.open)+" orders · "+n0(g.lines)+" lines":n0(row.q)+" "+drvLabel(row.task);
+      if(row.task.proxyWarning){
+        if(hasManualQty) qText="<span class=\"proxy-override\">"+n0(row.q)+" ctns (manual)</span>";
+        else qText="<span class=\"proxy-file\">"+n0(fileQty)+" lines (file — enter actual ctns →)</span>";
       }
+      var rKey=g.cfg.id+":"+row.task.id;
+      var manualQtyHtml="";
+      if(row.task.proxyWarning){
+        var manualVal=hasManualQty?qtyOv[qKey]:"";
+        manualQtyHtml="&nbsp;&nbsp;<span class=\"proxy-qty-wrap\"><span class=\"proxy-qty-lbl\">Actual ctns:</span><input class=\"proxy-qty-input\" type=\"number\" min=\"0\" step=\"1\" placeholder=\""+n0(fileQty)+"\" value=\""+manualVal+"\" data-qkey=\""+qKey+"\"></span>";
+      }
+      var rateHtml;
+      if(row.task.driver==="manualEntry"){
+        // qText already contains the mandatory input - just append the rate after it
+        rateHtml=qText+" \u00f7 <input class=\"rinput\" type=\"number\" min=\"0.1\" step=\"0.1\" value=\""+row.r.toFixed(2)+"\" data-key=\""+rKey+"\"> "+row.task.unit;
+      } else if(row.task.fixedPpl){
+        rateHtml=qText+" \u00f7 "+row.r.toFixed(1)+" "+row.task.unit;
+      } else {
+        rateHtml=qText+" \u00f7 <input class=\"rinput\" type=\"number\" min=\"0.1\" step=\"0.1\" value=\""+row.r.toFixed(2)+"\" data-key=\""+rKey+"\"> "+row.task.unit+manualQtyHtml;
+      }
+      var noteHtml=row.task.note?"<span class=\"task-note\">"+esc(row.task.note)+"</span>":"";
+      var nameHtml=row.task.proxyWarning?"<span style=\"color:var(--amber);font-weight:500;\">"+esc(row.task.label)+"</span>":esc(row.task.label);
+      actHtml+="<div class=\"arow\"><span class=\"atype "+k+"\">"+kLbl+"</span><span class=\"aname\">"+nameHtml+flag+"</span><span class=\"arate\">"+rateHtml+"</span>"+noteHtml+"<span class=\"ahrs\">"+n1(ct(row.hrs))+" hrs</span><span class=\"appl\">"+n1(ct(row.ppl))+"</span></div><div class=\"pbar\"><div class=\"pbar-fill "+k+"\" style=\"width:"+pct+"%\"></div></div>";;
+    });
+    // non-TRN block
+    var ntHtml="";
+    if(g.cfg.id==="tentops"&&g.ntrn.length){
+      var ntl=g.ntrn.reduce(function(s,o){return s+o.lines;},0);
+      var ntu=g.ntrn.reduce(function(s,o){return s+o.units;},0);
+      ntHtml="<div class=\"dblock\"><div class=\"dblock-head\"><div><div class=\"dblock-title\">Non-TRN Ten Tops orders</div><div class=\"dblock-note\">Visibility only — not included in KPI headcount</div></div><span class=\"pill info\">"+g.ntrn.length+" orders · "+n0(ntl)+" lines</span></div><table class=\"dtable\"><thead><tr><th>Order</th><th>Receiver</th><th class=\"num\">Lines</th><th class=\"num\">Units</th><th>Due</th><th>Status</th></tr></thead><tbody>"+g.ntrn.map(function(o){return"<tr><td><strong>"+esc(o.order)+"</strong></td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td>"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td></tr>";}).join("")+"</tbody></table></div>";
     }
+    html+="<details class=\"ccard"+(isBig?" big":"")+"\" open><summary class=\"ctop\"><div class=\"ctitle\"><span class=\"cname\">"+esc(g.cfg.name)+"</span><span class=\"ccode\">"+esc(g.cfg.codes.join(", "))+"</span></div><div class=\"cmets\">"+urgHtml+"<div class=\"met\"><strong>"+n0(ords)+"</strong><span>"+oLbl+"</span></div><div class=\"met\"><strong>"+n0(lns)+"</strong><span>"+lLbl+"</span></div><div class=\"met\"><strong>"+n0(uts)+"</strong><span>"+uLbl+"</span></div><div class=\"met\"><strong>"+n1(ct(tHrs))+"</strong><span>hrs</span></div><div class=\"ppill"+(warn?" warn":"")+"\">" +n1(ct(tPpl))+" ppl</div><button class=\"odetbtn\" onclick=\"event.stopPropagation();openDetail('"+g.cfg.id+"')\">Orders</button></div></summary><div class=\"cbody\">"+chipsHtml+scopePill+actHtml+ntHtml+"</div></details>";
+  });
+  document.getElementById("clientGrid").innerHTML=html;
+}
 
-    document.getElementById("fileInput").addEventListener("change", handleFile);
-    document.getElementById("productiveHours").addEventListener("input", render);
-    document.getElementById("resetRates").addEventListener("click", () => {
-      rateOverrides = {};
-      document.getElementById("productiveHours").value = PRODUCTIVE_HOURS_DEFAULT;
-      render();
+// ── RENDER FOOTER ────────────────────────────────────────────────
+function renderFooter(c){
+  var t=totals(c);
+  var rf=document.getElementById("rfooter");
+  if(rf)rf.style.display="flex";
+  document.getElementById("fmets").innerHTML="<span>Hrs: <strong>"+n1(t.th)+"</strong></span><span>Pick: <strong>"+n1(ct(t.pkp))+" ppl</strong></span><span>Pack: <strong>"+n1(ct(t.pakp))+" ppl</strong></span><span>Admin: <strong>"+n1(ct(t.adp))+" ppl</strong></span><span>Leaders: <input class=\"tlinput\" type=\"number\" min=\"0\" max=\"20\" step=\"1\" value=\""+tlCount+"\"></span>";
+  document.getElementById("ftotal").textContent=n1(ct(t.tp))+" ppl total";
+}
+
+// ── RENDER TEAM SUMMARY ──────────────────────────────────────────
+function renderTeam(c){
+  var map={};
+  c.rows.forEach(function(row){var k=row.task.team;if(!map[k])map[k]={team:k,hrs:0,ppl:0,notes:[]};map[k].hrs+=row.hrs;map[k].ppl+=row.ppl;map[k].notes.push(row.g.cfg.name+": "+n1(row.hrs)+"hrs");});
+  if(tlCount>0)map["Team leaders"]={team:"Team leaders",hrs:tlCount*prodHrs,ppl:tlCount,notes:[tlCount+" team leaders"]};
+  var rows=Object.values(map).sort(function(a,b){return b.ppl-a.ppl;});
+  var tp=document.getElementById("teamPanel");
+  if(tp)tp.classList.remove("hidden");
+  document.getElementById("teamRows").innerHTML=rows.map(function(r){return"<tr><td><strong>"+esc(r.team)+"</strong></td><td class=\"num\">"+n1(r.hrs)+"</td><td class=\"num\">"+n1(r.ppl)+"</td><td class=\"num\"><strong>"+Math.ceil(r.ppl)+"</strong></td><td style=\"font-size:10px;color:var(--muted)\">"+r.notes.slice(0,3).join(" · ")+"</td></tr>";}).join("");
+}
+
+// ── RENDER OTHER CLIENTS ─────────────────────────────────────────
+var unmHrsOv = {};
+
+function calcUnmPpl(code) {
+  var hrs = pn(unmHrsOv[code] || 0);
+  return prodHrs > 0 ? hrs / prodHrs : 0;
+}
+
+function renderGrandTotal() {
+  var c = calc();
+  var t = totals(c);
+  var kpiPpl = ct(t.tp);
+  var kpiHrs = t.th;
+  var unmHrs = Object.values(unmHrsOv).reduce(function(s, v) { return s + pn(v); }, 0);
+  var unmPpl = prodHrs > 0 ? unmHrs / prodHrs : 0;
+  var grandHrs = kpiHrs + unmHrs;
+  var grandPpl = kpiPpl + ct(unmPpl);
+
+  // Update grand total block at bottom
+  var el = document.getElementById("grandTotalRow");
+  if (el) {
+    el.style.display = "flex";
+    el.innerHTML =
+      "<div><div class=\"gtl\">Grand total resource required (KPI + unmapped)</div>" +
+      "<div class=\"gtv\">" + n1(grandPpl) + " ppl</div>" +
+      "<div class=\"gtsub\">" + n1(grandHrs) + " total hrs &middot; " + n1(kpiHrs) + " KPI hrs + " + n1(unmHrs) + " manual hrs</div></div>" +
+      "<div class=\"grand-total-segs\">" +
+      "<div class=\"gt-seg\"><div class=\"gtl\">KPI customers</div><div class=\"gtv\" style=\"font-size:18px;\">" + n1(kpiPpl) + " ppl</div></div>" +
+      "<div style=\"font-size:24px;color:#94a3b8;\">+</div>" +
+      "<div class=\"gt-seg\"><div class=\"gtl\">Unmapped (manual hrs)</div><div class=\"gtv\" style=\"font-size:18px;\">" + (unmHrs > 0 ? n1(ct(unmPpl)) + " ppl" : "enter hrs above") + "</div></div>" +
+      "</div>";
+  }
+
+  // Update sticky footer total pill
+  var ftEl = document.getElementById("ftotal");
+  if (ftEl) {
+    if (unmHrs > 0) {
+      ftEl.innerHTML = n1(grandPpl) + " ppl total <span style=\"font-size:11px;opacity:.8;\">(incl. unmapped)</span>";
+    } else {
+      ftEl.innerHTML = n1(kpiPpl) + " ppl total";
+    }
+    ftEl.style.background = "";
+    ftEl.style.color = "";
+  }
+
+  // Update sidebar people + hours to reflect grand total
+  var spEl = document.getElementById("sidePeople");
+  var shEl = document.getElementById("sideHours");
+  if (spEl) {
+    if (unmHrs > 0) {
+      spEl.innerHTML = n1(grandPpl) + " <small>ppl</small> <span style=\"font-size:11px;color:#6C4EAA;font-weight:500;\">(+unmapped)</span>";
+    } else {
+      spEl.innerHTML = n1(kpiPpl) + " <small>ppl</small>";
+    }
+  }
+  if (shEl) {
+    if (unmHrs > 0) {
+      shEl.innerHTML = n1(grandHrs) + " labour hrs <span style=\"color:#6C4EAA;font-weight:500;\">(+" + n1(unmHrs) + " manual)</span>";
+    } else {
+      shEl.textContent = n1(kpiHrs) + " labour hrs";
+    }
+  }
+
+
+}
+
+function renderOther() {
+  var unm = allOrders.filter(function(o) { return !o.mapped; });
+  var map = {};
+  unm.forEach(function(o) {
+    if (!map[o.code]) map[o.code] = { code: o.code, tot: 0, pln: 0, lines: 0, units: 0, fut: 0 };
+    map[o.code].tot++;
+    if (o.incl) { map[o.code].pln++; map[o.code].lines += o.lines; map[o.code].units += o.units; }
+    // picked complete excluded - not shown
+    else if (o.futDue) map[o.code].fut++;
+  });
+  var rows = Object.values(map).sort(function(a, b) { return a.code.localeCompare(b.code); });
+  var op = document.getElementById("otherPanel");
+  if (!rows.length) { if (op) op.classList.add("hidden"); renderGrandTotal(); return; }
+  if (op) op.classList.remove("hidden");
+  var totalPln = rows.reduce(function(s, r) { return s + r.pln; }, 0);
+  var totalLines = rows.reduce(function(s, r) { return s + r.lines; }, 0);
+  document.getElementById("otherStatus").textContent = rows.length + " codes \u00b7 " + n0(totalPln) + " planned orders \u00b7 " + n0(totalLines) + " lines";
+  document.getElementById("otherRows").innerHTML = rows.map(function(r) {
+    var enteredHrs = pn(unmHrsOv[r.code] || 0);
+    var ppl = calcUnmPpl(r.code);
+    var pplHtml = enteredHrs > 0 ? "<span class=\"unm-ppl\">" + n1(ct(ppl)) + "</span>" : "<span class=\"unm-ppl zero\">&mdash;</span>";
+    return "<tr>" +
+      "<td><strong>" + esc(r.code) + "</strong></td>" +
+      "<td class=\"num\">" + n0(r.pln) + "</td>" +
+      "<td class=\"num\"><strong>" + n0(r.lines) + "</strong></td>" +
+      "<td class=\"num\">" + n0(r.units) + "</td>" +
+      "<td class=\"num\">" + n0(r.fut) + "</td>" +
+      "<td style=\"text-align:center;\"><input class=\"hrs-input\" type=\"number\" min=\"0\" step=\"0.5\" placeholder=\"0.0\" value=\"" + (enteredHrs || "") + "\" data-code=\"" + esc(r.code) + "\"></td>" +
+      "<td class=\"num\">" + pplHtml + "</td>" +
+      "</tr>";
+  }).join("");
+  var totHrs = rows.reduce(function(s, r) { return s + pn(unmHrsOv[r.code] || 0); }, 0);
+  var totPpl = prodHrs > 0 ? totHrs / prodHrs : 0;
+  document.getElementById("otherFoot").innerHTML =
+    "<tr>" +
+    "<td><strong>Total unmapped</strong></td>" +
+    "<td class=\"num\"><strong>" + n0(totalPln) + "</strong></td>" +
+    "<td class=\"num\"><strong>" + n0(totalLines) + "</strong></td>" +
+    "<td class=\"num\"><strong>" + n0(rows.reduce(function(s,r){return s+r.units;},0)) + "</strong></td>" +
+    "<td class=\"num\">" + n0(rows.reduce(function(s,r){return s+r.fut;},0)) + "</td>" +
+    "<td style=\"text-align:center;\"><strong>" + n1(totHrs) + " hrs</strong></td>" +
+    "<td class=\"num\"><strong style=\"font-size:15px;color:var(--blue);\">" + n1(ct(totPpl)) + " ppl</strong></td>" +
+    "</tr>";
+  // Wire inputs WITHOUT re-rendering the whole table (prevents scroll jump)
+  document.querySelectorAll(".hrs-input").forEach(function(inp) {
+    inp.addEventListener("input", function(e) {
+      var code = e.target.dataset.code;
+      var val = pn(e.target.value);
+      unmHrsOv[code] = val;
+      // Only update the ppl cell for this row, not the whole table
+      var row = e.target.closest("tr");
+      if (row) {
+        var pplCell = row.querySelector(".unm-ppl") || row.cells[row.cells.length - 1].querySelector("span");
+        var ppl = prodHrs > 0 ? val / prodHrs : 0;
+        if (row.cells[row.cells.length - 1]) {
+          row.cells[row.cells.length - 1].innerHTML = val > 0
+            ? "<span class=\"unm-ppl\">" + n1(ct(ppl)) + "</span>"
+            : "<span class=\"unm-ppl zero\">&mdash;</span>";
+        }
+      }
+      // Update footer totals row
+      var allInputs = document.querySelectorAll(".hrs-input");
+      var totHrs = 0;
+      allInputs.forEach(function(i) { totHrs += pn(i.value); });
+      var totPpl = prodHrs > 0 ? totHrs / prodHrs : 0;
+      var foot = document.getElementById("otherFoot");
+      if (foot) {
+        var footCells = foot.querySelectorAll("tr td");
+        if (footCells.length >= 6) {
+          footCells[5].innerHTML = "<strong>" + n1(totHrs) + " hrs</strong>";
+          footCells[6].innerHTML = "<strong style=\"font-size:15px;color:var(--blue);\">" + n1(ct(totPpl)) + " ppl</strong>";
+        }
+      }
+      renderGrandTotal();
     });
-    document.getElementById("closeModal").addEventListener("click", closeModal);
-    document.getElementById("detailModal").addEventListener("click", event => {
-      if (event.target.id === "detailModal") closeModal();
+  });
+  renderGrandTotal();
+}
+
+// ── RENDER PIPELINE ──────────────────────────────────────────────
+function renderPipeline(){
+  var today=sod(new Date());
+  var days=[];
+  for(var i=0;i<14&&days.length<5;i++){var d=addD(today,i);if(isWD(d))days.push(d);}
+  var active=allOrders.filter(function(o){return o.incl||o.futDue;});
+  var maxN=1;
+  var data=CUSTOMERS.map(function(cfg){
+    var counts=days.map(function(d){
+      var n=active.filter(function(o){return cfg.codes.indexOf(o.code)>=0&&o.dueDt&&o.dueDt.getTime()===d.getTime();}).length;
+      if(n>maxN)maxN=n;
+      return n;
     });
-    document.addEventListener("keydown", event => {
-      if (event.key === "Escape") closeModal();
+    return{name:cfg.name,counts:counts};
+  }).filter(function(r){return r.counts.some(function(n){return n>0;});});
+  var dLbl=function(d){return d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});};
+  var html="<div class=\"pstrip\"><table><thead><tr><th>Customer</th>"+days.map(function(d,i){return"<th style=\""+(i===0?"color:var(--red)":"")+"\">"+dLbl(d)+"</th>";}).join("")+"</tr></thead><tbody>";
+  data.forEach(function(r){
+    html+="<tr><td>"+esc(r.name)+"</td>"+r.counts.map(function(n,i){return"<td>"+(n>0?"<span class=\"pnum"+(i===0?" red":"")+"\">" +n0(n)+"</span><div class=\"pbarbg\"><div class=\"pbarfill\" style=\"width:"+Math.round(n/maxN*100)+"%;"+(i===0?"background:var(--red)":"background:var(--blue)")+";\"></div></div>":"<span class=\"pnum none\">—</span>")+"</td>";}).join("")+"</tr>";
+  });
+  html+="<tr style=\"border-top:1px solid var(--line);background:var(--surface);\"><td style=\"font-weight:500;\">Total</td>"+days.map(function(d,i){var n=active.filter(function(o){return o.dueDt&&o.dueDt.getTime()===d.getTime();}).length;return"<td><span class=\"pnum"+(i===0?" red":"")+"\" style=\"font-weight:500;\">"+( n>0?n0(n):"—")+"</span></td>";}).join("")+"</tr>";
+  html+="</tbody></table></div><p style=\"font-size:10px;color:var(--faint);margin-top:8px;\">Orders by WMS despatch due date. Red = today's overdue target.</p>";
+  document.getElementById("pipeContent").innerHTML=html;
+}
+
+// ── RENDER ORDERS ────────────────────────────────────────────────
+function renderOrders(){
+  var sorted=[].concat(allOrders).sort(function(a,b){return Number(b.mapped)-Number(a.mapped)||a.cname.localeCompare(b.cname)||Number(b.incl)-Number(a.incl);});
+  document.getElementById("orderRows").innerHTML=sorted.map(function(o){var tone=!o.incl?(o.futDue?"info":"bad"):(o.rev?"warn":"good");return"<tr><td><strong>"+esc(o.cname)+"</strong><br><span style=\"font-size:10px;color:var(--faint)\">"+esc(o.code)+"</span></td><td>"+esc(o.order)+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td>"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td><td><span class=\"pill "+tone+"\">"+esc(o.reason)+"</span></td></tr>";}).join("");
+}
+
+// ── OPEN MODAL ───────────────────────────────────────────────────
+function openDetail(cid){
+  var g=groups().find(function(g){return g.cfg.id===cid;});
+  if(!g)return;
+  document.getElementById("mTitle").textContent=g.cfg.name;
+  document.getElementById("mSub").textContent=g.open+" planned · "+n0(g.lines)+" lines · "+g.fut+" future · "+g.picked+" picked";
+  document.getElementById("mRows").innerHTML=g.orders.map(function(o){var tone=!o.incl?(o.futDue?"info":"bad"):(o.rev?"warn":"good");return"<tr><td>"+esc(o.order)+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td>"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td><td><span class=\"pill "+tone+"\">"+esc(o.reason)+"</span></td></tr>";}).join("");
+  document.getElementById("detailModal").classList.add("open");
+}
+
+// ── MASTER RENDER ────────────────────────────────────────────────
+function render(){
+  try{
+    prodHrs=pn(document.getElementById("prodHrs").value)||PROD_HRS_DEFAULT;
+    var c=calc();
+    renderSidebar(c);
+    renderUbar();
+    renderEff(c);
+    renderClients(c);
+    renderOther();
+    renderGrandTotal();
+    renderTeam(c);
+    renderFooter(c);
+    renderPipeline();
+    renderOrders();
+    document.getElementById("planDate").textContent=nextBD().toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric"});
+    // wire rate inputs
+    document.querySelectorAll(".rinput").forEach(function(inp){
+      inp.addEventListener("change",function(e){rateOv[e.target.dataset.key]=pn(e.target.value);render();});
+      inp.addEventListener("keydown",function(e){if(e.key==="Enter")e.target.blur();});
     });
-    document.querySelectorAll(".tab").forEach(tab => {
-      tab.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach(item => item.classList.toggle("active", item === tab));
-        const id = tab.dataset.tab;
-        ["outbound", "inbound", "orders"].forEach(name => {
-          document.getElementById(`tab-${name}`).classList.toggle("hidden", name !== id);
-        });
+    document.querySelectorAll(".proxy-qty-input").forEach(function(inp){
+      inp.addEventListener("change",function(e){
+        var v=pn(e.target.value);
+        if(v>0) qtyOv[e.target.dataset.qkey]=v;
+        else delete qtyOv[e.target.dataset.qkey];
+        render();
+      });
+      inp.addEventListener("keydown",function(e){
+        if(e.key==="Enter") e.target.blur();
       });
     });
-  </script>
+    document.querySelectorAll(".tlinput").forEach(function(inp){
+      inp.addEventListener("change",function(e){tlCount=pn(e.target.value);render();});
+    });
+  }catch(err){
+    console.error("Render error:",err);
+    setStatus("Render error: "+err.message,"err");
+  }
+}
+
+// ── FILE HANDLER ─────────────────────────────────────────────────
+function handleFile(e){
+  var file=e.target.files&&e.target.files[0];
+  if(!file)return;
+  setStatus("Reading file...","");
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      setStatus("Parsing workbook...","");
+      var data=new Uint8Array(ev.target.result);
+      var wb=XLSX.read(data,{type:"array"});
+      setStatus("Found sheets: "+wb.SheetNames.join(", "),"");
+      var best=null;
+      wb.SheetNames.forEach(function(sn){
+        var ws=wb.Sheets[sn];
+        var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+        var hi=findHdrRow(rows);
+        if(hi>=0){
+          var parsed=parseOrders(rows);
+          if(!best||parsed.length>best.orders.length)best={sn:sn,orders:parsed};
+        }
+      });
+      if(!best)throw new Error("No sheet with Customer + Client Reference columns found.");
+      allOrders=best.orders;
+      var kpi=allOrders.filter(function(o){return o.mapped;}).length;
+      var other=allOrders.filter(function(o){return !o.mapped;}).length;
+      document.getElementById("srcText").textContent=file.name+" · "+best.sn+" · "+kpi+" KPI rows · "+other+" other rows";
+      document.getElementById("emptyState").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+      setStatus("Loaded "+allOrders.length+" rows","ok");
+      render();
+    }catch(err){
+      console.error(err);
+      setStatus("Error: "+err.message,"err");
+    }
+  };
+  reader.onerror=function(){setStatus("Could not read file","err");};
+  reader.readAsArrayBuffer(file);
+}
+
+// ── EVENTS ───────────────────────────────────────────────────────
+document.getElementById("fileInput").addEventListener("change",handleFile);
+document.getElementById("fileInput2").addEventListener("change",handleFile);
+document.getElementById("actualRostered").addEventListener("input",render);
+document.getElementById("prodHrs").addEventListener("input",render);
+document.getElementById("mClose").addEventListener("click",function(){
+  document.getElementById("detailModal").classList.remove("open");
+});
+document.getElementById("detailModal").addEventListener("click",function(e){
+  if(e.target===this)this.classList.remove("open");
+});
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape")document.getElementById("detailModal").classList.remove("open");
+});
+document.querySelectorAll(".vtb").forEach(function(btn){
+  btn.addEventListener("click",function(){
+    curView=this.dataset.view;
+    document.querySelectorAll(".vtb").forEach(function(b){b.classList.toggle("active",b===btn);});
+    ["roster","pipeline","orders"].forEach(function(v){
+      document.getElementById("view-"+v).classList.toggle("hidden",v!==curView);
+    });
+  });
+});
+
+// ── INIT ─────────────────────────────────────────────────────────
+document.getElementById("planDate").textContent=nextBD().toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric"});
+updateClock();
+setInterval(updateClock,30000);
+</script>
 </body>
 </html>
