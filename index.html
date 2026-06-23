@@ -36,6 +36,10 @@ button,input{font:inherit;}
 .scard .sub{font-size:11px;color:rgba(255,255,255,.45);display:block;margin-top:4px;}
 .sdivider{height:1px;background:rgba(255,255,255,.1);margin:10px 0;}
 .stag{font-size:12px;color:rgba(255,255,255,.5);padding:3px 0;display:block;margin-bottom:4px;}
+button.stag{border:0;background:transparent;text-align:left;font-family:inherit;width:100%;}
+button.stag.clickable{cursor:pointer;}
+button.stag.clickable:hover{filter:brightness(1.08);}
+button.stag:disabled{cursor:default;}
 .stag.warn{background:var(--amber-bg);color:var(--amber);font-weight:600;font-size:12px;padding:5px 9px;border-radius:var(--radius-sm);border:0;}
 .stag.flag{background:var(--red-bg);color:var(--red);font-weight:600;font-size:12px;padding:5px 9px;border-radius:var(--radius-sm);border:0;}
 .stag.muted{color:rgba(255,255,255,.4);font-size:11px;}
@@ -150,7 +154,8 @@ details.ccard>summary::-webkit-details-marker{display:none;}
 .atype.wrap{background:var(--amber-bg);color:var(--amber);}
 .atype.admin{background:var(--purple-bg);color:var(--purple);}
 .aname{flex:0 0 260px;width:260px;font-size:13px;color:var(--ink);line-height:1.3;}
-.rflag{display:inline-flex;margin-left:5px;padding:2px 7px;border-radius:4px;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:600;}
+.rflag{display:inline-flex;align-items:center;margin-left:8px;min-height:28px;padding:0 12px;border-radius:999px;background:var(--red-bg);color:var(--red);font-size:13px;font-weight:800;border:0;cursor:pointer;font-family:inherit;line-height:1.2;}
+.rflag:hover{filter:brightness(.97);}
 .task-note{font-size:11px;color:var(--faint);white-space:nowrap;padding:0 8px;font-style:italic;}
 .arate{flex:1;font-size:12px;color:var(--muted);}
 .ahrs{flex:0 0 62px;font-size:13px;color:var(--muted);text-align:right;white-space:nowrap;}
@@ -237,6 +242,34 @@ table.data tr:last-child td{border-bottom:0;}
 table.data tr:hover td{background:var(--surface);}
 table.data .num{text-align:right;}
 
+/* manual activity inputs */
+.activity-step{display:inline-flex;align-items:stretch;height:38px;border:1.5px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;vertical-align:middle;}
+.activity-input{width:82px;min-height:36px;border:0;border-right:1px solid var(--line);border-radius:0;padding:5px 8px;font-size:14px;font-weight:700;text-align:right;outline:0;background:#fff;color:var(--ink);-moz-appearance:textfield;}
+.activity-input::-webkit-inner-spin-button,.activity-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.activity-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(20,88,160,.12);}
+.activity-step:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(20,88,160,.12);}
+.activity-spin{display:flex;flex-direction:column;width:26px;background:var(--surface);}
+.activity-step-btn{flex:1;border:0;background:transparent;color:var(--blue);font-size:12px;font-weight:800;line-height:1;cursor:pointer;padding:0;}
+.activity-step-btn:first-child{border-bottom:1px solid var(--line);}
+.activity-step-btn:hover{background:var(--blue-bg);}
+.activity-total{font-size:15px;font-weight:800;color:var(--blue);}
+.activity-total.zero{color:var(--faint);}
+#activityTable{table-layout:fixed;}
+#activityTable col.activity-name{width:36%;}
+#activityTable col.activity-pallets{width:22%;}
+#activityTable col.activity-kpi{width:25%;}
+#activityTable col.activity-hours{width:9%;}
+#activityTable col.activity-people{width:8%;}
+#activityTable th,#activityTable td{vertical-align:middle;}
+#activityTable th:nth-child(2),#activityTable td:nth-child(2){text-align:center;}
+#activityTable th:nth-child(3),#activityTable td:nth-child(3){text-align:center;}
+#activityTable th:nth-child(4),#activityTable td:nth-child(4){text-align:right;}
+#activityTable th:nth-child(5),#activityTable td:nth-child(5){text-align:right;}
+#activityTable tfoot td{border-top:2px solid var(--line);background:var(--surface);}
+.activity-kpi-cell{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:220px;}
+.activity-unit{font-size:12px;color:var(--muted);white-space:nowrap;}
+.activity-footer-muted{color:var(--faint);}
+
 /* hrs input in unmapped table */
 .hrs-input{width:90px;border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:5px 8px;font-size:14px;font-weight:600;text-align:right;outline:0;background:var(--panel);color:var(--ink);}
 .hrs-input:focus{border-color:var(--blue);background:#f0f7ff;}
@@ -282,6 +315,54 @@ tfoot .num{text-align:right;}
 .mclose{width:32px;height:32px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;border-radius:var(--radius-sm);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mclose:hover{background:rgba(255,255,255,.2);}
 .mbody{overflow:auto;}
+#detailModal.summary-open .mcard{width:min(760px,calc(100vw - 48px));}
+#detailModal.summary-open .mhead{padding:20px 24px;}
+#detailModal.summary-open .mbody{padding:16px 22px 22px;background:#f6f5f1;}
+#detailModal.summary-open table.data{border-collapse:separate;border-spacing:0 8px;}
+#detailModal.summary-open table.data th{padding:0 16px 6px;border-bottom:0;background:transparent;font-size:11px;}
+#detailModal.summary-open table.data td{padding:14px 16px;border-bottom:0;background:#fff;font-size:15px;}
+#detailModal.summary-open table.data td:first-child{border-radius:8px 0 0 8px;}
+#detailModal.summary-open table.data td:last-child{border-radius:0 8px 8px 0;}
+#detailModal.summary-open table.data tr:hover td{background:#fff;}
+#detailModal.summary-open table.data td strong{font-weight:800;}
+.summary-order-pill{display:inline-flex;align-items:center;justify-content:center;min-width:46px;min-height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--amber-bg);color:var(--amber);font:inherit;font-weight:800;cursor:pointer;}
+.summary-order-pill:hover{filter:brightness(.97);}
+
+/* printable labour plan */
+.report-shell{max-width:1120px;margin:0 auto 40px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow-soft);overflow:hidden;}
+.report-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 22px;border-bottom:1px solid var(--line);background:var(--surface);}
+.report-toolbar span{font-size:13px;color:var(--muted);font-weight:700;}
+.print-btn{min-height:38px;padding:0 16px;border:0;border-radius:8px;background:var(--navy);color:#fff;font-size:14px;font-weight:800;cursor:pointer;}
+.print-btn:hover{background:#18375f;}
+.report-page{padding:28px 32px 34px;}
+.report-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:start;margin-bottom:22px;padding-bottom:18px;border-bottom:3px solid var(--navy);}
+.report-kicker{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:6px;}
+.report-title{font-size:30px;font-weight:900;color:var(--ink);letter-spacing:0;line-height:1.05;}
+.report-meta{display:grid;gap:5px;font-size:13px;color:var(--muted);text-align:right;}
+.report-meta strong{color:var(--ink);}
+.report-section{margin-top:22px;}
+.report-section h2{font-size:18px;font-weight:900;color:var(--ink);margin:0 0 10px;}
+.report-table{width:100%;border-collapse:collapse;font-size:13px;}
+.report-table th{padding:9px 10px;border-bottom:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;text-align:left;}
+.report-table td{padding:10px;border-bottom:1px solid #ece8df;color:var(--ink);}
+.report-table .num{text-align:right;white-space:nowrap;}
+.report-table .strong{font-weight:900;}
+.report-table tfoot td{background:#faf9f6;font-weight:900;border-top:2px solid var(--line);}
+.report-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px;}
+.report-total-card{border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:#faf9f6;}
+.report-total-card .lbl{font-size:12px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.05em;}
+.report-total-card .val{margin-top:6px;font-size:28px;font-weight:900;color:var(--navy);line-height:1;}
+.report-note{margin-top:18px;font-size:12px;color:var(--muted);line-height:1.5;}
+
+@media print{
+  body{background:#fff!important;}
+  .rail,.topbar,.ubar,.empty,#view-roster,#view-pipeline,#view-orders,.report-toolbar,.modal,.rfooter{display:none!important;}
+  .shell,.main,.content,#dashboard,#view-print{display:block!important;height:auto!important;overflow:visible!important;padding:0!important;margin:0!important;background:#fff!important;}
+  .report-shell{max-width:none;margin:0;border:0;border-radius:0;box-shadow:none;overflow:visible;}
+  .report-page{padding:14mm;}
+  .report-table th,.report-table td{padding:6px 8px;}
+  .report-section{break-inside:avoid;}
+}
 
 /* QIO-inspired readability refresh, retaining the BRI palette */
 :root{--shadow:0 20px 60px rgba(16,34,60,.10);--shadow-soft:0 10px 28px rgba(16,34,60,.07);}
@@ -441,8 +522,8 @@ table.data tr:hover td{background:#fff;}
 
     <div class="sdivider"></div>
     <div class="nav-label">Alerts</div>
-    <span class="stag" id="sideReview">No review flags</span>
-    <span class="stag" id="sideUnmapped">All customers mapped</span>
+    <button class="stag" id="sideReview" type="button" disabled>No review flags</button>
+    <button class="stag" id="sideUnmapped" type="button" disabled>All customers mapped</button>
 
     <div class="sdivider"></div>
     <div class="nav-label">Upload</div>
@@ -478,6 +559,7 @@ table.data tr:hover td{background:#fff;}
         <button class="vtb active" data-view="roster">Roster</button>
         <button class="vtb" data-view="pipeline">Pipeline</button>
         <button class="vtb" data-view="orders">Orders</button>
+        <button class="vtb" data-view="print">Print Plan</button>
       </div>
     </header>
 
@@ -531,6 +613,37 @@ table.data tr:hover td{background:#fff;}
             </div>
           </div>
           <div class="grand-total-row hidden" id="grandTotalRow" style="display:none;margin-top:10px;"></div>
+          <div class="panel" id="activityPanel" style="margin-top:12px;">
+            <div class="panel-head">
+              <div>
+                <h2>Manual pallet activities</h2>
+                <p>Enter expected pallets for additional inbound/outbound activity. Default KPI is 20 pallets/hr and can be adjusted per activity.</p>
+              </div>
+              <span id="activityStatus" style="font-size:12px;color:var(--muted);"></span>
+            </div>
+            <div class="twrap">
+              <table class="data" id="activityTable">
+                <colgroup>
+                  <col class="activity-name">
+                  <col class="activity-pallets">
+                  <col class="activity-kpi">
+                  <col class="activity-hours">
+                  <col class="activity-people">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Activity</th>
+                    <th class="num">Pallets</th>
+                    <th class="num">KPI</th>
+                    <th class="num">Hours</th>
+                    <th class="num">People</th>
+                  </tr>
+                </thead>
+                <tbody id="activityRows"></tbody>
+                <tfoot id="activityFoot"></tfoot>
+              </table>
+            </div>
+          </div>
           <div class="rfooter" id="rfooter">
             <span class="lbl">Total across all KPI customers</span>
             <div class="fmets" id="fmets"></div>
@@ -552,6 +665,11 @@ table.data tr:hover td{background:#fff;}
           </div>
         </div>
 
+        <!-- PRINT PLAN VIEW -->
+        <div id="view-print" class="hidden">
+          <div class="report-shell" id="planReport"></div>
+        </div>
+
       </div>
     </div>
   </main>
@@ -565,7 +683,7 @@ table.data tr:hover td{background:#fff;}
       <button class="mclose" id="mClose">&times;</button>
     </div>
     <div class="mbody twrap">
-      <table class="data"><thead><tr><th>Order</th><th>Receiver</th><th class="num">Lines</th><th class="num">Units</th><th>Due</th><th>Status</th><th>Planning</th></tr></thead><tbody id="mRows"></tbody></table>
+      <table class="data"><thead><tr id="mHead"><th>Order</th><th>Receiver</th><th class="num">Lines</th><th class="num">Units</th><th>Due</th><th>Status</th><th>Planning</th></tr></thead><tbody id="mRows"></tbody></table>
     </div>
   </div>
 </div>
@@ -578,6 +696,14 @@ var TT_CTN_DIVISOR   = 18;
 var CASUAL_RATE      = 35;
 var EXCL = {"picked complete":1,"pick complete":1};
 var REVIEW = {"did not allocate":1,"empty order":1};
+var MANUAL_ACTIVITIES = [
+  {id:"inboundUnload",label:"Inbound Unload"},
+  {id:"inboundReceipt",label:"Inbound Receipt"},
+  {id:"inboundPutaway",label:"Inbound PutAway"},
+  {id:"outboundLoading",label:"Outbound Loading"},
+  {id:"containerUnload",label:"Container Unload"}
+];
+var DEFAULT_ACTIVITY_KPI = 20;
 
 var CUSTOMERS = [
   {id:"bbwecomm",name:"BBW EComm",codes:["AVRBBW"],tasks:[
@@ -620,14 +746,18 @@ var prodHrs   = PROD_HRS_DEFAULT;
 var tlCount   = 5;
 var curView   = "roster";
 var pendingDataFocusKey = "";
+var activityOv = {};
+var loadedFileName = "";
 
 // ── FORMATTERS ───────────────────────────────────────────────────
 var f0  = new Intl.NumberFormat("en-AU",{maximumFractionDigits:0});
 var f1  = new Intl.NumberFormat("en-AU",{maximumFractionDigits:1});
+var f1f = new Intl.NumberFormat("en-AU",{minimumFractionDigits:1,maximumFractionDigits:1});
 var fMo = new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",maximumFractionDigits:0});
 
 function n0(v){return Number.isFinite(v)?f0.format(v):"0";}
 function n1(v){return Number.isFinite(v)?f1.format(v):"0";}
+function n1f(v){return Number.isFinite(v)?f1f.format(v):"0.0";}
 function cl(v){return String(v==null?"":v).trim();}
 function nm(v){return cl(v).toLowerCase().replace(/\s+/g," ");}
 function ct(v){return Number.isFinite(v)&&v>0?Math.ceil((v-0.000001)*10)/10:0;}
@@ -731,7 +861,7 @@ function parseOrders(rows){
     var futDue=!excl&&dueDt&&!inWin;
     var incl=!excl&&!!inWin;
     var ovd=incl&&dueDt&&dueDt<today;
-    var reason=excl?"Excluded: Picked Complete":noDue?"Planned (no due date)":futDue?"Future due":rev?"Needs review":"Planned";
+    var reason=excl?"Excluded: Picked Complete":rev?"Needs review":noDue?"Planned (no due date)":futDue?"Future due":"Planned";
     if(cfg&&cfg.id==="bbwecomm"&&isManifestStatus({status:status}))reason="Picked Complete - Awaiting Packing";
     out.push({
       code:code,cid:cfg?cfg.id:"",cname:cfg?cfg.name:code,mapped:!!cfg,
@@ -874,20 +1004,80 @@ function totals(c){
   return t;
 }
 
+function activityValue(id,field){
+  var row=activityOv[id]||{};
+  if(field==="kpi")return pn(row.kpi)||DEFAULT_ACTIVITY_KPI;
+  return pn(row[field]||0);
+}
+
+function manualActivityRows(){
+  return MANUAL_ACTIVITIES.map(function(a){
+    var pallets=activityValue(a.id,"pallets");
+    var kpi=activityValue(a.id,"kpi");
+    var hrs=kpi>0?pallets/kpi:0;
+    var ppl=prodHrs>0?hrs/prodHrs:0;
+    return{id:a.id,label:a.label,pallets:pallets,kpi:kpi,hrs:hrs,ppl:ppl};
+  });
+}
+
+function manualActivityTotals(){
+  var rows=manualActivityRows();
+  return{
+    rows:rows,
+    pallets:rows.reduce(function(s,r){return s+r.pallets;},0),
+    hrs:rows.reduce(function(s,r){return s+r.hrs;},0),
+    ppl:rows.reduce(function(s,r){return s+r.ppl;},0)
+  };
+}
+
+function resourceTotals(c){
+  var t=totals(c);
+  var kpiPpl=ct(t.tp);
+  var kpiHrs=t.th;
+  var unmHrs=Object.values(unmHrsOv).reduce(function(s,v){return s+pn(v);},0);
+  var unmPpl=prodHrs>0?unmHrs/prodHrs:0;
+  var acts=manualActivityTotals();
+  var manualHrs=unmHrs+acts.hrs;
+  var manualPpl=ct(unmPpl)+ct(acts.ppl);
+  return{
+    base:t,
+    kpiHrs:kpiHrs,
+    kpiPpl:kpiPpl,
+    unmHrs:unmHrs,
+    unmPpl:unmPpl,
+    activityHrs:acts.hrs,
+    activityPpl:acts.ppl,
+    activityPallets:acts.pallets,
+    manualHrs:manualHrs,
+    manualPpl:manualPpl,
+    grandHrs:kpiHrs+manualHrs,
+    grandPpl:kpiPpl+manualPpl
+  };
+}
+
 // ── RENDER SIDEBAR ───────────────────────────────────────────────
 function renderSidebar(c){
-  var t=totals(c);
+  var rt=resourceTotals(c);
   var cutoff=nextBD();
   var active=allOrders.filter(function(o){return o.incl;});
-  document.getElementById("sidePeople").innerHTML=n1(ct(t.tp))+" <small>ppl</small>";
-  document.getElementById("sideHours").textContent=n1(t.th)+" labour hrs";
+  document.getElementById("sidePeople").innerHTML=n1(rt.grandPpl)+" <small>ppl</small>";
+  document.getElementById("sideHours").innerHTML=n1(rt.grandHrs)+" labour hrs";
   document.getElementById("sideOrders").textContent=n0(active.length);
   document.getElementById("sideRows").textContent="of "+n0(allOrders.length)+" total rows";
   document.getElementById("sideDue").textContent=cutoff.toLocaleDateString("en-AU");
   var revCt=c.gs.reduce(function(s,g){return s+g.revOrd;},0);
   var rel=document.getElementById("sideReview");
-  if(revCt>0){rel.textContent="⚠ "+revCt+" orders need review";rel.className="stag flag";}
-  else{rel.textContent="No review flags";rel.className="stag";}
+  if(revCt>0){
+    rel.textContent="⚠ "+revCt+" "+(revCt===1?"order needs":"orders need")+" review";
+    rel.className="stag flag clickable";
+    rel.disabled=false;
+    rel.onclick=function(){openReviewDetail();};
+  }else{
+    rel.textContent="No review flags";
+    rel.className="stag";
+    rel.disabled=true;
+    rel.onclick=null;
+  }
   updateUnmappedAlert();
 }
 
@@ -908,9 +1098,9 @@ function renderUbar(){
 
 // ── RENDER EFF BAR ───────────────────────────────────────────────
 function renderEff(c){
-  var t=totals(c);
+  var rt=resourceTotals(c);
   var sub=document.getElementById("ubTotalSub");
-  if(sub)sub.textContent="orders · "+n1(t.th)+" hrs · "+n1(ct(t.tp))+" ppl";
+  if(sub)sub.textContent="orders · "+n1(rt.grandHrs)+" hrs · "+n1(rt.grandPpl)+" ppl";
 }
 
 // ── RENDER UNMAPPED ──────────────────────────────────────────────
@@ -930,7 +1120,8 @@ function renderClients(c){
   var byC={};
   c.rows.forEach(function(row){var id=row.g.cfg.id;if(!byC[id])byC[id]=[];byC[id].push(row);});
   var html="";
-  c.gs.forEach(function(g){
+  var displayGroups=[].concat(c.gs).sort(function(a,b){return a.cfg.name.localeCompare(b.cfg.name);});
+  displayGroups.forEach(function(g){
     var rows=byC[g.cfg.id]||[];
     var tPpl=rows.reduce(function(s,r){return s+r.ppl;},0);
     var tHrs=rows.reduce(function(s,r){return s+r.hrs;},0);
@@ -1009,7 +1200,7 @@ function renderClients(c){
       var kClass=k+(row.task.highlight==="amber"?" attn":"");
       var barClass=k+(row.task.highlight==="amber"?" attn":"");
       var pct=tHrs>0?Math.max(3,Math.min(100,row.hrs/tHrs*100)):0;
-      var flag=idx===0&&g.revOrd?"<span class=\"rflag\">"+g.revOrd+" review</span>":"";
+      var flag=idx===0&&g.revOrd?"<button class=\"rflag\" type=\"button\" onclick=\"event.stopPropagation();openReviewDetail('"+g.cfg.id+"')\">"+g.revOrd+" review</button>":"";
       var proxyFlag=row.task.proxyWarning?"<span class=\"proxy-flag\">&#9888; proxy rate</span>":"";
       var qKey=g.cfg.id+":"+row.task.id+":qty";
       var hasManualQty=qtyOv[qKey]&&qtyOv[qKey]>0;
@@ -1064,10 +1255,11 @@ function renderClients(c){
 // ── RENDER FOOTER ────────────────────────────────────────────────
 function renderFooter(c){
   var t=totals(c);
+  var rt=resourceTotals(c);
   var rf=document.getElementById("rfooter");
   if(rf)rf.style.display="flex";
   document.getElementById("fmets").innerHTML="<span>Hrs: <strong>"+n1(t.th)+"</strong></span><span>Pick: <strong>"+n1(ct(t.pkp))+" ppl</strong></span><span>Pack: <strong>"+n1(ct(t.pakp))+" ppl</strong></span><span>Admin: <strong>"+n1(ct(t.adp))+" ppl</strong></span><span>Leaders: <span class=\"tlstep\"><input class=\"tlinput\" type=\"number\" min=\"0\" max=\"20\" step=\"1\" value=\""+tlCount+"\"><span class=\"tlspin\"><button class=\"tlbtn\" type=\"button\" data-delta=\"1\" aria-label=\"Increase leaders\">&#9650;</button><button class=\"tlbtn\" type=\"button\" data-delta=\"-1\" aria-label=\"Decrease leaders\">&#9660;</button></span></span></span>";
-  document.getElementById("ftotal").textContent=n1(ct(t.tp))+" ppl total";
+  document.getElementById("ftotal").innerHTML=n1(rt.grandPpl)+" ppl total";
 }
 
 // ── RENDER OTHER CLIENTS ─────────────────────────────────────────
@@ -1094,46 +1286,123 @@ function updateUnmappedAlert() {
   var codes = unresolvedUnmappedCodes();
   if (codes.length) {
     uel.textContent = "⚠ " + codes.length + " " + (codes.length === 1 ? "customer" : "customer(s)") + " not mapped";
-    uel.className = "stag warn";
+    uel.className = "stag warn clickable";
+    uel.disabled = false;
+    uel.onclick = openUnmappedSummary;
   } else {
     uel.textContent = "All customers mapped";
     uel.className = "stag";
+    uel.disabled = true;
+    uel.onclick = null;
   }
+}
+
+function renderManualActivities(){
+  var rows=manualActivityRows();
+  var body=document.getElementById("activityRows");
+  if(!body)return;
+  body.innerHTML=rows.map(function(r){
+    var ppl=ct(r.ppl);
+    var palletInput="<span class=\"activity-step\"><input class=\"activity-input activity-pallets\" type=\"number\" inputmode=\"numeric\" min=\"0\" step=\"1\" placeholder=\"0\" value=\""+(r.pallets>0?String(r.pallets):"")+"\" data-id=\""+esc(r.id)+"\" data-field=\"pallets\"><span class=\"activity-spin\"><button class=\"activity-step-btn\" type=\"button\" data-id=\""+esc(r.id)+"\" data-field=\"pallets\" data-delta=\"1\">+</button><button class=\"activity-step-btn\" type=\"button\" data-id=\""+esc(r.id)+"\" data-field=\"pallets\" data-delta=\"-1\">-</button></span></span>";
+    var kpiInput="<span class=\"activity-step\"><input class=\"activity-input activity-kpi\" type=\"number\" inputmode=\"numeric\" min=\"1\" step=\"1\" value=\""+String(Math.round(r.kpi))+"\" data-id=\""+esc(r.id)+"\" data-field=\"kpi\"><span class=\"activity-spin\"><button class=\"activity-step-btn\" type=\"button\" data-id=\""+esc(r.id)+"\" data-field=\"kpi\" data-delta=\"1\">+</button><button class=\"activity-step-btn\" type=\"button\" data-id=\""+esc(r.id)+"\" data-field=\"kpi\" data-delta=\"-1\">-</button></span></span>";
+    return"<tr data-activity=\""+esc(r.id)+"\">"+
+      "<td><strong>"+esc(r.label)+"</strong><br><span style=\"font-size:11px;color:var(--faint);\">UOM: pallets</span></td>"+
+      "<td class=\"num\">"+palletInput+"</td>"+
+      "<td class=\"num\"><span class=\"activity-kpi-cell\">"+kpiInput+" <span class=\"activity-unit\">pallets/hr</span></span></td>"+
+      "<td class=\"num act-hrs\">"+n1f(r.hrs)+"</td>"+
+      "<td class=\"num\"><span class=\"activity-total"+(ppl>0?"":" zero")+" act-ppl\">"+(ppl>0?n1(ppl):"&mdash;")+"</span></td>"+
+      "</tr>";
+  }).join("");
+  updateManualActivityDisplay();
+  document.querySelectorAll(".activity-input").forEach(function(inp){
+    inp.addEventListener("input",function(e){
+      var id=e.target.dataset.id;
+      var field=e.target.dataset.field;
+      if(!activityOv[id])activityOv[id]={};
+      if(field==="kpi"){
+        var k=Math.round(pn(e.target.value));
+        if(k>0)activityOv[id].kpi=k;
+        else delete activityOv[id].kpi;
+      }else{
+        activityOv[id].pallets=Math.max(0,Math.round(pn(e.target.value)));
+      }
+      updateManualActivityDisplay();
+      renderEff(calc());
+      renderGrandTotal();
+    });
+  });
+  document.querySelectorAll(".activity-step-btn").forEach(function(btn){
+    btn.addEventListener("click",function(e){
+      var id=e.currentTarget.dataset.id;
+      var field=e.currentTarget.dataset.field;
+      var delta=pn(e.currentTarget.dataset.delta);
+      if(!activityOv[id])activityOv[id]={};
+      var cur=field==="kpi"?activityValue(id,"kpi"):activityValue(id,"pallets");
+      var next=Math.max(field==="kpi"?1:0,Math.round(cur)+delta);
+      activityOv[id][field]=next;
+      var input=document.querySelector(".activity-input[data-id=\""+id+"\"][data-field=\""+field+"\"]");
+      if(input)input.value=next>0?String(next):"";
+      updateManualActivityDisplay();
+      renderEff(calc());
+      renderGrandTotal();
+    });
+  });
+}
+
+function updateManualActivityDisplay(){
+  var rows=manualActivityRows();
+  rows.forEach(function(r){
+    var tr=document.querySelector("tr[data-activity=\""+r.id+"\"]");
+    if(!tr)return;
+    var hrs=tr.querySelector(".act-hrs");
+    var ppl=tr.querySelector(".act-ppl");
+    if(hrs)hrs.textContent=n1f(r.hrs);
+    if(ppl){
+      var cp=ct(r.ppl);
+      ppl.innerHTML=cp>0?n1(cp):"&mdash;";
+      ppl.classList.toggle("zero",cp<=0);
+    }
+  });
+  var totals=manualActivityTotals();
+  var foot=document.getElementById("activityFoot");
+  if(foot){
+    foot.innerHTML="<tr>"+
+      "<td><strong>Total manual activities</strong></td>"+
+      "<td class=\"num\"><strong>"+n0(totals.pallets)+" pallets</strong></td>"+
+      "<td class=\"num\"><span class=\"activity-footer-muted\">&mdash;</span></td>"+
+      "<td class=\"num\"><strong>"+n1f(totals.hrs)+" hrs</strong></td>"+
+      "<td class=\"num\"><strong style=\"font-size:15px;color:var(--blue);\">"+n1(ct(totals.ppl))+" ppl</strong></td>"+
+      "</tr>";
+  }
+  var status=document.getElementById("activityStatus");
+  if(status)status.textContent=totals.pallets>0?n0(totals.pallets)+" pallets · "+n1f(totals.hrs)+" hrs · "+n1(ct(totals.ppl))+" ppl":"KPI default: 20 pallets/hr";
 }
 
 function renderGrandTotal() {
   var c = calc();
-  var t = totals(c);
-  var kpiPpl = ct(t.tp);
-  var kpiHrs = t.th;
-  var unmHrs = Object.values(unmHrsOv).reduce(function(s, v) { return s + pn(v); }, 0);
-  var unmPpl = prodHrs > 0 ? unmHrs / prodHrs : 0;
-  var grandHrs = kpiHrs + unmHrs;
-  var grandPpl = kpiPpl + ct(unmPpl);
+  var rt = resourceTotals(c);
 
   // Update grand total block at bottom
   var el = document.getElementById("grandTotalRow");
   if (el) {
     el.style.display = "flex";
     el.innerHTML =
-      "<div><div class=\"gtl\">Grand total resource required (KPI + unmapped)</div>" +
-      "<div class=\"gtv\">" + n1(grandPpl) + " ppl</div>" +
-      "<div class=\"gtsub\">" + n1(grandHrs) + " total hrs &middot; " + n1(kpiHrs) + " KPI hrs + " + n1(unmHrs) + " manual hrs</div></div>" +
+      "<div><div class=\"gtl\">Grand total resource required (KPI + unmapped + manual activities)</div>" +
+      "<div class=\"gtv\">" + n1(rt.grandPpl) + " ppl</div>" +
+      "<div class=\"gtsub\">" + n1(rt.grandHrs) + " total hrs &middot; " + n1(rt.kpiHrs) + " KPI hrs + " + n1(rt.unmHrs) + " unmapped hrs + " + n1(rt.activityHrs) + " activity hrs</div></div>" +
       "<div class=\"grand-total-segs\">" +
-      "<div class=\"gt-seg\"><div class=\"gtl\">KPI customers</div><div class=\"gtv\" style=\"font-size:18px;\">" + n1(kpiPpl) + " ppl</div></div>" +
+      "<div class=\"gt-seg\"><div class=\"gtl\">KPI customers</div><div class=\"gtv\" style=\"font-size:18px;\">" + n1(rt.kpiPpl) + " ppl</div></div>" +
       "<div style=\"font-size:24px;color:#94a3b8;\">+</div>" +
-      "<div class=\"gt-seg\"><div class=\"gtl\">Unmapped (manual hrs)</div><div class=\"gtv\" style=\"font-size:18px;\">" + (unmHrs > 0 ? n1(ct(unmPpl)) + " ppl" : "enter hrs above") + "</div></div>" +
+      "<div class=\"gt-seg\"><div class=\"gtl\">Unmapped</div><div class=\"gtv\" style=\"font-size:18px;\">" + (rt.unmHrs > 0 ? n1(ct(rt.unmPpl)) + " ppl" : "enter hrs") + "</div></div>" +
+      "<div style=\"font-size:24px;color:#94a3b8;\">+</div>" +
+      "<div class=\"gt-seg\"><div class=\"gtl\">Manual activities</div><div class=\"gtv\" style=\"font-size:18px;\">" + (rt.activityHrs > 0 ? n1(ct(rt.activityPpl)) + " ppl" : "enter pallets") + "</div></div>" +
       "</div>";
   }
 
   // Update sticky footer total pill
   var ftEl = document.getElementById("ftotal");
   if (ftEl) {
-    if (unmHrs > 0) {
-      ftEl.innerHTML = n1(grandPpl) + " ppl total <span style=\"font-size:11px;opacity:.8;\">(incl. unmapped)</span>";
-    } else {
-      ftEl.innerHTML = n1(kpiPpl) + " ppl total";
-    }
+    ftEl.innerHTML = n1(rt.grandPpl) + " ppl total";
     ftEl.style.background = "";
     ftEl.style.color = "";
   }
@@ -1142,18 +1411,10 @@ function renderGrandTotal() {
   var spEl = document.getElementById("sidePeople");
   var shEl = document.getElementById("sideHours");
   if (spEl) {
-    if (unmHrs > 0) {
-      spEl.innerHTML = n1(grandPpl) + " <small>ppl</small> <span style=\"font-size:11px;color:#6C4EAA;font-weight:500;\">(+unmapped)</span>";
-    } else {
-      spEl.innerHTML = n1(kpiPpl) + " <small>ppl</small>";
-    }
+    spEl.innerHTML = n1(rt.grandPpl) + " <small>ppl</small>";
   }
   if (shEl) {
-    if (unmHrs > 0) {
-      shEl.innerHTML = n1(grandHrs) + " labour hrs <span style=\"color:#6C4EAA;font-weight:500;\">(+" + n1(unmHrs) + " manual)</span>";
-    } else {
-      shEl.textContent = n1(kpiHrs) + " labour hrs";
-    }
+    shEl.textContent = n1(rt.grandHrs) + " labour hrs";
   }
 
 
@@ -1230,6 +1491,7 @@ function renderOther() {
         }
       }
       updateUnmappedAlert();
+      renderEff(calc());
       renderGrandTotal();
     });
     inp.addEventListener("keydown", function(e) {
@@ -1334,8 +1596,200 @@ function renderOrders(){
   document.getElementById("orderRows").innerHTML=sorted.map(function(o){var tone=!o.incl?(o.futDue?"info":"bad"):(o.rev?"warn":"good");return"<tr><td><strong>"+esc(o.cname)+"</strong><br><span style=\"font-size:10px;color:var(--faint)\">"+esc(o.code)+"</span></td><td>"+esc(o.order)+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td>"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td><td><span class=\"pill "+tone+"\">"+esc(o.reason)+"</span></td></tr>";}).join("");
 }
 
+// ── PRINT PLAN REPORT ────────────────────────────────────────────
+function reportMappedMetric(g,field){
+  if(field==="orders"){
+    if(g.cfg.id==="tentops")return g.trnOrd;
+    if(g.cfg.id==="bbwb2b")return g.bbwTotalOrd;
+    return g.open;
+  }
+  if(field==="lines")return g.cfg.id==="tentops"?g.trnLines:g.lines;
+  if(field==="units")return g.cfg.id==="tentops"?g.trnUnits:g.units;
+  return 0;
+}
+
+function reportMappedRows(c){
+  var byC={};
+  c.rows.forEach(function(row){var id=row.g.cfg.id;if(!byC[id])byC[id]=[];byC[id].push(row);});
+  return [].concat(c.gs).sort(function(a,b){return a.cfg.name.localeCompare(b.cfg.name);}).map(function(g){
+    var rows=byC[g.cfg.id]||[];
+    var hrs=rows.reduce(function(s,r){return s+r.hrs;},0);
+    var ppl=rows.reduce(function(s,r){return s+r.ppl;},0);
+    var missingMandatory=g.cfg.id==="tentops"&&rows.some(function(r){return r.task.mandatory&&r.q<=0;});
+    if(missingMandatory){hrs=0;ppl=0;}
+    return{
+      name:g.cfg.name,
+      code:g.cfg.codes.join(", "),
+      orders:reportMappedMetric(g,"orders"),
+      lines:reportMappedMetric(g,"lines"),
+      units:reportMappedMetric(g,"units"),
+      hrs:hrs,
+      ppl:ct(ppl)
+    };
+  });
+}
+
+function reportUnmappedRows(){
+  var map={};
+  allOrders.forEach(function(o){
+    if(o.mapped||!o.incl)return;
+    if(!map[o.code])map[o.code]={code:o.code,orders:0,lines:0,units:0,hrs:0,ppl:0};
+    map[o.code].orders++;
+    map[o.code].lines+=o.lines;
+    map[o.code].units+=o.units;
+  });
+  return Object.values(map).sort(function(a,b){return a.code.localeCompare(b.code);}).map(function(r){
+    r.hrs=pn(unmHrsOv[r.code]||0);
+    r.ppl=ct(calcUnmPpl(r.code));
+    return r;
+  });
+}
+
+function sumReportRows(rows,field){
+  return rows.reduce(function(s,r){return s+(r[field]||0);},0);
+}
+
+function reportTableRows(rows,kind){
+  if(!rows.length)return"<tr><td colspan=\""+(kind==="mapped"?7:6)+"\" style=\"color:var(--muted);\">No rows to report</td></tr>";
+  return rows.map(function(r){
+    if(kind==="mapped"){
+      return"<tr><td><strong>"+esc(r.name)+"</strong></td><td>"+esc(r.code)+"</td><td class=\"num\">"+n0(r.orders)+"</td><td class=\"num\">"+n0(r.lines)+"</td><td class=\"num\">"+n0(r.units)+"</td><td class=\"num\">"+n1f(r.hrs)+" hrs</td><td class=\"num strong\">"+n1(r.ppl)+" ppl</td></tr>";
+    }
+    return"<tr><td><strong>"+esc(r.code)+"</strong></td><td class=\"num\">"+n0(r.orders)+"</td><td class=\"num\">"+n0(r.lines)+"</td><td class=\"num\">"+n0(r.units)+"</td><td class=\"num\">"+n1f(r.hrs)+" hrs</td><td class=\"num strong\">"+n1(r.ppl)+" ppl</td></tr>";
+  }).join("");
+}
+
+function renderReport(c){
+  var el=document.getElementById("planReport");
+  if(!el)return;
+  var mapped=reportMappedRows(c);
+  var unmapped=reportUnmappedRows();
+  var acts=manualActivityTotals();
+  var rt=resourceTotals(c);
+  var mappedHrs=sumReportRows(mapped,"hrs");
+  var mappedPpl=sumReportRows(mapped,"ppl");
+  var mappedOrders=sumReportRows(mapped,"orders");
+  var unmOrders=sumReportRows(unmapped,"orders");
+  var unmHrs=sumReportRows(unmapped,"hrs");
+  var unmPpl=sumReportRows(unmapped,"ppl");
+  var leaderHrs=tlCount*prodHrs;
+  var prepared=new Date().toLocaleString("en-AU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"numeric",minute:"2-digit"});
+  var due=nextBD().toLocaleDateString("en-AU");
+  var actRows=acts.rows.map(function(r){
+    return"<tr><td><strong>"+esc(r.label)+"</strong></td><td class=\"num\">"+n0(r.pallets)+" pallets</td><td class=\"num\">"+n0(r.kpi)+" pallets/hr</td><td class=\"num\">"+n1f(r.hrs)+" hrs</td><td class=\"num strong\">"+n1(ct(r.ppl))+" ppl</td></tr>";
+  }).join("");
+  el.innerHTML=
+    "<div class=\"report-toolbar\"><span>Review the plan below, then print or save as PDF.</span><button class=\"print-btn\" type=\"button\" onclick=\"window.print()\">Print Plan</button></div>"+
+    "<div class=\"report-page\">"+
+      "<div class=\"report-head\"><div><div class=\"report-kicker\">BRI Sydney DC</div><div class=\"report-title\">Daily Labour Plan Summary</div></div>"+
+      "<div class=\"report-meta\"><div><strong>Plan date:</strong> "+esc(due)+"</div><div><strong>Prepared:</strong> "+esc(prepared)+"</div><div><strong>Source:</strong> "+esc(loadedFileName||"Uploaded orders file")+"</div></div></div>"+
+      "<div class=\"report-summary-grid\">"+
+        "<div class=\"report-total-card\"><div class=\"lbl\">Total orders</div><div class=\"val\">"+n0(mappedOrders+unmOrders)+"</div></div>"+
+        "<div class=\"report-total-card\"><div class=\"lbl\">Total labour hrs</div><div class=\"val\">"+n1f(rt.grandHrs)+"</div></div>"+
+        "<div class=\"report-total-card\"><div class=\"lbl\">Headcount</div><div class=\"val\">"+n1(rt.grandPpl)+" ppl</div></div>"+
+      "</div>"+
+      "<div class=\"report-section\"><h2>Mapped Customers</h2><table class=\"report-table\"><thead><tr><th>Customer</th><th>Code</th><th class=\"num\">Orders</th><th class=\"num\">Lines</th><th class=\"num\">Units</th><th class=\"num\">Labour hrs</th><th class=\"num\">People</th></tr></thead><tbody>"+reportTableRows(mapped,"mapped")+"</tbody><tfoot><tr><td colspan=\"2\">Mapped customer subtotal</td><td class=\"num\">"+n0(mappedOrders)+"</td><td class=\"num\">"+n0(sumReportRows(mapped,"lines"))+"</td><td class=\"num\">"+n0(sumReportRows(mapped,"units"))+"</td><td class=\"num\">"+n1f(mappedHrs)+" hrs</td><td class=\"num\">"+n1(mappedPpl)+" ppl</td></tr></tfoot></table></div>"+
+      "<div class=\"report-section\"><h2>Unmapped Customers</h2><table class=\"report-table\"><thead><tr><th>Customer code</th><th class=\"num\">Orders</th><th class=\"num\">Lines</th><th class=\"num\">Units</th><th class=\"num\">Manual hrs</th><th class=\"num\">People</th></tr></thead><tbody>"+reportTableRows(unmapped,"unmapped")+"</tbody><tfoot><tr><td>Unmapped subtotal</td><td class=\"num\">"+n0(unmOrders)+"</td><td class=\"num\">"+n0(sumReportRows(unmapped,"lines"))+"</td><td class=\"num\">"+n0(sumReportRows(unmapped,"units"))+"</td><td class=\"num\">"+n1f(unmHrs)+" hrs</td><td class=\"num\">"+n1(unmPpl)+" ppl</td></tr></tfoot></table></div>"+
+      "<div class=\"report-section\"><h2>Manual Pallet Activities</h2><table class=\"report-table\"><thead><tr><th>Activity</th><th class=\"num\">Pallets</th><th class=\"num\">KPI</th><th class=\"num\">Labour hrs</th><th class=\"num\">People</th></tr></thead><tbody>"+(actRows||"<tr><td colspan=\"5\" style=\"color:var(--muted);\">No manual activities entered</td></tr>")+"</tbody><tfoot><tr><td>Manual activity subtotal</td><td class=\"num\">"+n0(acts.pallets)+" pallets</td><td></td><td class=\"num\">"+n1f(acts.hrs)+" hrs</td><td class=\"num\">"+n1(ct(acts.ppl))+" ppl</td></tr></tfoot></table></div>"+
+      "<div class=\"report-section\"><h2>Grand Total Headcount</h2><table class=\"report-table\"><thead><tr><th>Category</th><th class=\"num\">Orders</th><th class=\"num\">Labour hrs</th><th class=\"num\">People</th></tr></thead><tbody>"+
+        "<tr><td>Mapped customer workload</td><td class=\"num\">"+n0(mappedOrders)+"</td><td class=\"num\">"+n1f(mappedHrs)+" hrs</td><td class=\"num\">"+n1(mappedPpl)+" ppl</td></tr>"+
+        "<tr><td>Unmapped customers</td><td class=\"num\">"+n0(unmOrders)+"</td><td class=\"num\">"+n1f(unmHrs)+" hrs</td><td class=\"num\">"+n1(unmPpl)+" ppl</td></tr>"+
+        "<tr><td>Manual pallet activities</td><td class=\"num\">-</td><td class=\"num\">"+n1f(acts.hrs)+" hrs</td><td class=\"num\">"+n1(ct(acts.ppl))+" ppl</td></tr>"+
+        "<tr><td>Team leaders</td><td class=\"num\">-</td><td class=\"num\">"+n1f(leaderHrs)+" hrs</td><td class=\"num\">"+n1(tlCount)+" ppl</td></tr>"+
+      "</tbody><tfoot><tr><td>Total headcount required</td><td class=\"num\">"+n0(mappedOrders+unmOrders)+"</td><td class=\"num\">"+n1f(rt.grandHrs)+" hrs</td><td class=\"num\">"+n1(rt.grandPpl)+" ppl</td></tr></tfoot></table></div>"+
+      "<div class=\"report-note\">People calculated using productive hours per person: <strong>"+n1f(prodHrs)+" hrs</strong>. Team leaders are included as "+n0(tlCount)+" people in the total headcount.</div>"+
+    "</div>";
+}
+
 // ── OPEN MODAL ───────────────────────────────────────────────────
+var DETAIL_MODAL_HEADERS=[
+  {label:"Order"},
+  {label:"Receiver"},
+  {label:"Lines",cls:"num"},
+  {label:"Units",cls:"num"},
+  {label:"Due"},
+  {label:"Status"},
+  {label:"Planning"}
+];
+var modalReturnToSummary=false;
+
+function setModalHeaders(headers){
+  var h=document.getElementById("mHead");
+  if(!h)return;
+  h.innerHTML=headers.map(function(col){return"<th"+(col.cls?" class=\""+col.cls+"\"":"")+">"+esc(col.label)+"</th>";}).join("");
+}
+
+function resetModalHeaders(){
+  document.getElementById("detailModal").classList.remove("summary-open");
+  setModalHeaders(DETAIL_MODAL_HEADERS);
+}
+
+function unmappedSummaryRows(){
+  var pending={};
+  unresolvedUnmappedCodes().forEach(function(code){pending[code]=true;});
+  var map={};
+  allOrders.forEach(function(o){
+    if(!pending[o.code]||o.mapped||!o.incl)return;
+    if(!map[o.code])map[o.code]={code:o.code,orders:0,lines:0,units:0};
+    map[o.code].orders++;
+    map[o.code].lines+=o.lines;
+    map[o.code].units+=o.units;
+  });
+  return Object.values(map).sort(function(a,b){return a.code.localeCompare(b.code);});
+}
+
+function openUnmappedSummary(){
+  modalReturnToSummary=false;
+  var rows=unmappedSummaryRows();
+  var totalOrders=rows.reduce(function(s,r){return s+r.orders;},0);
+  var totalLines=rows.reduce(function(s,r){return s+r.lines;},0);
+  var totalUnits=rows.reduce(function(s,r){return s+r.units;},0);
+  setModalHeaders([
+    {label:"Customer code"},
+    {label:"Orders",cls:"num"},
+    {label:"Lines",cls:"num"},
+    {label:"Units",cls:"num"}
+  ]);
+  document.getElementById("mTitle").textContent="Unmapped Customers";
+  document.getElementById("mSub").textContent=rows.length?rows.length+" customer codes · "+n0(totalOrders)+" orders · "+n0(totalLines)+" lines · "+n0(totalUnits)+" units":"All customers mapped";
+  document.getElementById("mRows").innerHTML=rows.map(function(r){
+    return"<tr><td><strong>"+esc(r.code)+"</strong></td><td class=\"num\"><button class=\"summary-order-pill\" type=\"button\" onclick=\"openUnmappedDetail("+esc(JSON.stringify(r.code))+")\">"+n0(r.orders)+"</button></td><td class=\"num\"><strong>"+n0(r.lines)+"</strong></td><td class=\"num\">"+n0(r.units)+"</td></tr>";
+  }).join("");
+  document.getElementById("detailModal").classList.add("open","summary-open");
+}
+
+function openReviewDetail(cid){
+  modalReturnToSummary=false;
+  resetModalHeaders();
+  var gs=groups();
+  var title="Review Orders";
+  var orders=[];
+  if(cid){
+    var g=gs.find(function(g){return g.cfg.id===cid;});
+    if(!g)return;
+    title=g.cfg.name+" - Review Orders";
+    orders=g.orders.filter(function(o){return o.incl&&o.rev;});
+  }else{
+    gs.forEach(function(g){
+      orders=orders.concat(g.orders.filter(function(o){return o.incl&&o.rev;}));
+    });
+  }
+  var lines=orders.reduce(function(s,o){return s+o.lines;},0);
+  var custs={};
+  orders.forEach(function(o){custs[o.cname+"|"+o.code]=o.cname+" ("+o.code+")";});
+  var custText=Object.keys(custs).sort().map(function(k){return custs[k];}).join(" · ");
+  document.getElementById("mTitle").textContent=title;
+  document.getElementById("mSub").textContent=orders.length?orders.length+" "+(orders.length===1?"order requires":"orders require")+" review · "+n0(lines)+" lines"+(!cid&&custText?" · "+custText:""):"No orders requiring review";
+  document.getElementById("mRows").innerHTML=orders.map(function(o){
+    var orderCell=cid?esc(o.order):"<strong>"+esc(o.order)+"</strong><br><span style=\"font-size:10px;color:var(--faint)\">"+esc(o.cname)+" · "+esc(o.code)+"</span>";
+    return"<tr><td>"+orderCell+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td class=\""+(o.ovd?"overdue-date":"")+"\">"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td><td>"+detailPlanningPill(o)+"</td></tr>";
+  }).join("");
+  document.getElementById("detailModal").classList.add("open");
+}
+
 function openDetail(cid,statusKey){
+  modalReturnToSummary=false;
+  resetModalHeaders();
   var g=groups().find(function(g){return g.cfg.id===cid;});
   if(!g)return;
   var orders=g.orders;
@@ -1392,6 +1846,10 @@ function openDetail(cid,statusKey){
 function detailPlanningPill(o){
   var tone=!o.incl?(o.futDue?"info":"bad"):(o.rev?"warn":"good");
   var label=o.reason;
+  if(o.rev){
+    tone="bad";
+    label="Needs review";
+  }
   if(nm(o.status)==="part picked"){
     tone="warn";
     label="Part Picked";
@@ -1400,6 +1858,8 @@ function detailPlanningPill(o){
 }
 
 function openUnmappedDetail(code){
+  modalReturnToSummary=document.getElementById("detailModal").classList.contains("summary-open");
+  resetModalHeaders();
   var orders=allOrders.filter(function(o){return !o.mapped&&o.code===code;});
   var active=orders.filter(function(o){return o.incl;});
   var lines=active.reduce(function(s,o){return s+o.lines;},0);
@@ -1410,6 +1870,8 @@ function openUnmappedDetail(code){
 }
 
 function openPipelineDetail(cid,dateKey){
+  modalReturnToSummary=false;
+  resetModalHeaders();
   var parts=dateKey.split("-").map(Number);
   var d=new Date(parts[0],parts[1]-1,parts[2]);
   var title="";
@@ -1502,10 +1964,12 @@ function render(){
     renderEff(c);
     renderClients(c);
     renderOther();
+    renderManualActivities();
     renderGrandTotal();
     renderFooter(c);
     renderPipeline();
     renderOrders();
+    renderReport(c);
     document.getElementById("planDate").textContent=nextBD().toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric"});
     // wire rate inputs
     document.querySelectorAll(".rinput").forEach(function(inp){
@@ -1570,6 +2034,7 @@ function handleFile(e){
       });
       if(!best)throw new Error("No sheet with Customer + Client Reference columns found.");
       allOrders=best.orders;
+      loadedFileName=file.name;
       document.getElementById("srcText").textContent=file.name+" · Total rows: "+n0(allOrders.length);
       document.getElementById("emptyState").classList.add("hidden");
       document.getElementById("dashboard").classList.remove("hidden");
@@ -1588,20 +2053,27 @@ function handleFile(e){
 document.getElementById("fileInput").addEventListener("change",handleFile);
 document.getElementById("fileInput2").addEventListener("change",handleFile);
 document.getElementById("prodHrs").addEventListener("input",render);
-document.getElementById("mClose").addEventListener("click",function(){
-  document.getElementById("detailModal").classList.remove("open");
-});
+function closeDetailModal(){
+  var modal=document.getElementById("detailModal");
+  if(modalReturnToSummary){
+    modalReturnToSummary=false;
+    openUnmappedSummary();
+    return;
+  }
+  modal.classList.remove("open","summary-open");
+}
+document.getElementById("mClose").addEventListener("click",closeDetailModal);
 document.getElementById("detailModal").addEventListener("click",function(e){
-  if(e.target===this)this.classList.remove("open");
+  if(e.target===this)closeDetailModal();
 });
 document.addEventListener("keydown",function(e){
-  if(e.key==="Escape")document.getElementById("detailModal").classList.remove("open");
+  if(e.key==="Escape"&&document.getElementById("detailModal").classList.contains("open"))closeDetailModal();
 });
 document.querySelectorAll(".vtb").forEach(function(btn){
   btn.addEventListener("click",function(){
     curView=this.dataset.view;
     document.querySelectorAll(".vtb").forEach(function(b){b.classList.toggle("active",b===btn);});
-    ["roster","pipeline","orders"].forEach(function(v){
+    ["roster","pipeline","orders","print"].forEach(function(v){
       document.getElementById("view-"+v).classList.toggle("hidden",v!==curView);
     });
   });
