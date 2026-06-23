@@ -531,10 +531,6 @@ table.data tr:hover td{background:#fff;}
             </div>
           </div>
           <div class="grand-total-row hidden" id="grandTotalRow" style="display:none;margin-top:10px;"></div>
-          <div class="panel hidden" id="teamPanel" style="margin-top:12px;">
-            <div class="panel-head"><div><h2>Team summary</h2><p>People by workstream across all customers.</p></div></div>
-            <div class="twrap"><table class="data"><thead><tr><th>Team</th><th class="num">Hours</th><th class="num">People</th><th class="num">Rounded</th><th>Notes</th></tr></thead><tbody id="teamRows"></tbody></table></div>
-          </div>
           <div class="rfooter" id="rfooter">
             <span class="lbl">Total across all KPI customers</span>
             <div class="fmets" id="fmets"></div>
@@ -1074,22 +1070,6 @@ function renderFooter(c){
   document.getElementById("ftotal").textContent=n1(ct(t.tp))+" ppl total";
 }
 
-// ── RENDER TEAM SUMMARY ──────────────────────────────────────────
-function renderTeam(c){
-  var map={};
-  c.rows.forEach(function(row){var k=row.task.team;if(!map[k])map[k]={team:k,hrs:0,ppl:0,notes:[]};map[k].hrs+=row.hrs;map[k].ppl+=row.ppl;map[k].notes.push(row.g.cfg.name+": "+n1(row.hrs)+"hrs");});
-  var unmHrs=Object.values(unmHrsOv).reduce(function(s,v){return s+pn(v);},0);
-  if(unmHrs>0){
-    var unmCodes=Object.keys(unmHrsOv).filter(function(code){return pn(unmHrsOv[code])>0;}).sort();
-    map["Unmapped manual hours"]={team:"Unmapped manual hours",hrs:unmHrs,ppl:prodHrs>0?unmHrs/prodHrs:0,notes:[unmCodes.length+" customer code"+(unmCodes.length===1?"":"s")]};
-  }
-  if(tlCount>0)map["Team leaders"]={team:"Team leaders",hrs:tlCount*prodHrs,ppl:tlCount,notes:[tlCount+" team leaders"]};
-  var rows=Object.values(map).sort(function(a,b){return b.ppl-a.ppl;});
-  var tp=document.getElementById("teamPanel");
-  if(tp)tp.classList.remove("hidden");
-  document.getElementById("teamRows").innerHTML=rows.map(function(r){return"<tr><td><strong>"+esc(r.team)+"</strong></td><td class=\"num\">"+n1(r.hrs)+"</td><td class=\"num\">"+n1(r.ppl)+"</td><td class=\"num\"><strong>"+Math.ceil(r.ppl)+"</strong></td><td style=\"font-size:10px;color:var(--muted)\">"+r.notes.slice(0,3).join(" · ")+"</td></tr>";}).join("");
-}
-
 // ── RENDER OTHER CLIENTS ─────────────────────────────────────────
 var unmHrsOv = {};
 
@@ -1250,7 +1230,6 @@ function renderOther() {
         }
       }
       updateUnmappedAlert();
-      renderTeam(calc());
       renderGrandTotal();
     });
     inp.addEventListener("keydown", function(e) {
@@ -1524,7 +1503,6 @@ function render(){
     renderClients(c);
     renderOther();
     renderGrandTotal();
-    renderTeam(c);
     renderFooter(c);
     renderPipeline();
     renderOrders();
