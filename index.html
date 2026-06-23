@@ -26,6 +26,7 @@ button,input{font:inherit;}
 .rail{width:200px;flex-shrink:0;height:100vh;overflow-y:auto;background:var(--navy);padding:16px 14px;display:flex;flex-direction:column;}
 .logo{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.1);}
 .logo-mark{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bri-logo-img{display:block;width:100%;height:auto;object-fit:contain;}
 .logo-text strong{display:block;font-size:13px;font-weight:600;color:#fff;}
 .logo-text span{display:block;font-size:11px;color:rgba(255,255,255,.5);}
 .nav-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;}
@@ -369,11 +370,14 @@ tfoot .num{text-align:right;}
 body{font-size:16px;background:linear-gradient(135deg,rgba(45,106,10,.10),transparent 34%),linear-gradient(315deg,rgba(20,88,160,.08),transparent 32%),var(--bg);}
 .shell{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh;height:100vh;overflow:hidden;}
 .rail{width:auto;background:var(--navy);border-right:1px solid rgba(255,255,255,.08);padding:28px;gap:0;color:#fff;}
-.logo{gap:12px;margin-bottom:28px;padding-bottom:26px;border-bottom:1px solid rgba(255,255,255,.14);}
+.logo{display:flex;flex-direction:column;align-items:stretch;gap:0;margin-bottom:12px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.14);}
 .logo-mark{width:52px;height:44px;border-radius:10px;background:#34445f;box-shadow:none;font-size:14px;font-weight:800;}
+.bri-logo-img{width:96px;height:96px;object-fit:contain;align-self:center;background:transparent;border:3px solid rgba(203,213,225,.78);border-radius:999px;padding:0;box-sizing:border-box;box-shadow:0 0 0 1px rgba(203,213,225,.16);}
+.logo-text{display:block;text-align:center;}
 .logo-text strong{font-size:18px;font-weight:800;color:#fff;letter-spacing:0;}
 .logo-text span{font-size:14px;color:#9aa7ba;}
-.nav-label{margin:22px 0 9px;color:#8390a3;font-size:12px;font-weight:800;letter-spacing:.08em;}
+.nav-label{margin:18px 0 9px;color:#6ee7a0;font-size:12px;font-weight:800;letter-spacing:.08em;}
+.logo + .nav-label{margin-top:8px;}
 .scard,.file-input-wrap,.shrs{background:#233752;border:1px solid #40536f;border-radius:8px;padding:16px 18px;margin-bottom:10px;box-shadow:none;}
 .scard .lbl,.shrs .lbl,.sup-lbl{font-size:14px;color:#a7b2c2;font-weight:500;}
 .scard .val{margin-top:12px;font-size:36px;font-weight:800;color:#fff;letter-spacing:0;}
@@ -391,7 +395,7 @@ input[type=file]::file-selector-button{min-height:34px;border:1px solid #62718a;
 .main{background:transparent;min-width:0;}
 .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;padding:20px 36px 12px;border-bottom:0;background:transparent;gap:24px;}
 .topbar-eyebrow{margin:0 0 5px;color:var(--green);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.11em;}
-.topbar h1{font-size:clamp(30px,3.2vw,48px);font-weight:800;line-height:1;letter-spacing:0;color:var(--ink);}
+.topbar h1{font-size:clamp(28px,2.7vw,42px);font-weight:800;line-height:1;letter-spacing:0;color:var(--ink);}
 .topbar-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px;}
 .topbar-date{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:999px;background:var(--blue-bg);color:var(--blue);font-size:14px;font-weight:800;}
 .topbar-date span{margin-left:4px;}
@@ -499,8 +503,7 @@ table.data tr:hover td{background:#fff;}
   <!-- SIDEBAR -->
   <aside class="rail">
     <div class="logo">
-      <div class="logo-mark">BRI</div>
-      <div class="logo-text"><strong>Planner</strong><span>Outbound</span></div>
+      <img class="bri-logo-img" src="assets/BRI-Icon-Circle.webp" alt="BRI">
     </div>
 
     <div class="nav-label">Today's plan</div>
@@ -549,7 +552,7 @@ table.data tr:hover td{background:#fff;}
     <header class="topbar">
       <div>
         <div class="topbar-eyebrow">Sydney DC Operations</div>
-        <h1>Daily resource planner</h1>
+        <h1>Daily Resource Planner</h1>
         <div class="topbar-meta">
           <span class="topbar-date">Plan date: <span id="planDate">—</span></span>
           <span class="topbar-sub" id="srcText">No file loaded &middot; Upload the outstanding orders xlsx to begin</span>
