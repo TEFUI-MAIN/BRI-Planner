@@ -12,7 +12,7 @@
   --bg:#f4f2ea;--panel:#ffffff;--surface:#f8f7f3;--ink:#171717;--muted:#5c5b56;--faint:#9e9d97;--line:#e2dfd6;--navy:#10223c;
   --green:#2d6a0a;--green-bg:#e8f5e0;--blue:#1458a0;--blue-bg:#e8f1fb;
   --purple:#3c3489;--purple-bg:#eeedfe;--amber:#7a4800;--amber-bg:#fdf0dc;
-  --red:#9b2c2c;--red-bg:#fdf0f0;
+  --red:#dc2626;--red-bg:#fdf0f0;
   --font:Manrope,Inter,system-ui,sans-serif;
   --radius:10px;--radius-sm:6px;
 }
@@ -55,7 +55,7 @@ input[type=file]::file-selector-button{border:1px solid rgba(255,255,255,.2);bor
 .shrs input{border:0;outline:0;background:transparent;color:#fff;font-size:22px;font-weight:600;width:80px;}
 .sstatus{font-size:11px;color:rgba(255,255,255,.5);display:block;margin:4px 0;min-height:16px;}
 .sstatus.ok{color:#6ee7a0;}
-.sstatus.err{color:#fca5a5;font-weight:500;}
+.sstatus.err{color:var(--red);font-weight:500;}
 
 /* ── MAIN ────────────────────────────────────────────── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
@@ -206,6 +206,8 @@ details.ccard>summary::-webkit-details-marker{display:none;}
 .dtable tr:last-child td{border-bottom:0;}
 .dtable .num{text-align:right;}
 .overdue-date{color:var(--red)!important;font-weight:800;}
+.today-pick-date{color:#00b050!important;font-weight:900;}
+.excluded-pick-date{color:var(--faint)!important;font-weight:700;}
 
 /* pipeline */
 .pstrip{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel);}
@@ -392,7 +394,7 @@ input[type=file]::file-selector-button{min-height:34px;border:1px solid #62718a;
 .shrs input{color:#fff;font-size:28px;font-weight:800;}
 .sstatus{color:#9aa7ba;}
 .sstatus.ok{color:#6ee7a0;}
-.sstatus.err{color:#fca5a5;}
+.sstatus.err{color:var(--red);}
 .main{background:transparent;min-width:0;}
 .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;padding:20px 36px 12px;border-bottom:0;background:transparent;gap:24px;}
 .topbar-eyebrow{margin:0 0 5px;color:var(--green);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.11em;}
@@ -440,6 +442,8 @@ input[type=file]::file-selector-button{min-height:34px;border:1px solid #62718a;
 .cbody{padding:16px 22px 20px;gap:10px;background:transparent;}
 .schips{gap:8px;margin-bottom:6px;}
 .chip,.pill{min-height:32px;align-items:center;padding:0 12px;border-radius:999px;font-size:13px;font-weight:800;}
+.schips .chip{min-height:28px;padding:0 10px;font-size:12px;line-height:1.1;}
+.cstate .pill,.dblock .pill{min-height:26px;padding:0 10px;font-size:12px;line-height:1.1;}
 .arow{display:grid;grid-template-columns:74px minmax(240px,.9fr) minmax(300px,1.4fr) minmax(120px,.45fr) 80px 56px;gap:14px;min-height:58px;align-items:center;padding:8px 0;border-top:1px solid rgba(226,223,214,.65);}
 .arow:first-of-type{border-top:0;}
 .atype{width:74px;min-height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:13px;font-weight:800;}
@@ -464,6 +468,7 @@ table.data,.dtable{font-size:15px;}
 table.data th,.dtable th{padding:12px 16px;font-size:12px;}
 table.data td,.dtable td{padding:14px 16px;}
 table.data tr:hover td{background:#fff;}
+#mRows .pill,#orderRows .pill{min-height:26px;padding:0 10px;font-size:12px;line-height:1.15;white-space:nowrap;}
 .pstrip th,.pstrip td{padding:14px 16px;}
 .grand-total-row{border-radius:8px;padding:20px 24px;box-shadow:var(--shadow);background:var(--navy);}
 .gtv{font-size:34px;}
@@ -519,9 +524,9 @@ table.data tr:hover td{background:#fff;}
       <span class="sub" id="sideRows">Upload file to begin</span>
     </div>
     <div class="scard">
-      <span class="lbl">Due by</span>
+      <span class="lbl">Primary pick date</span>
       <span class="val" id="sideDue" style="font-size:15px;">—</span>
-      <span class="sub">Overdue + next business day</span>
+      <span class="sub">Blank WMS due dates use order date + 1 business day</span>
     </div>
 
     <div class="sdivider"></div>
@@ -569,7 +574,7 @@ table.data tr:hover td{background:#fff;}
 
     <div class="ubar" id="ubar">
       <div class="ucell late"><div class="ulbl">Overdue — must ship tomorrow</div><div class="uval" id="ubOverdue">—</div><div class="usub" id="ubOverdueSub"></div></div>
-      <div class="ucell due"><div class="ulbl">Due tomorrow</div><div class="uval" id="ubTom">—</div><div class="usub" id="ubTomSub"></div></div>
+      <div class="ucell due"><div class="ulbl">Current plan window</div><div class="uval" id="ubTom">—</div><div class="usub" id="ubTomSub"></div></div>
       <div class="ucell plan"><div class="ulbl">Total planned workload</div><div class="uval" id="ubTotal">—</div><div class="usub" id="ubTotalSub"></div></div>
     </div>
 
@@ -664,8 +669,8 @@ table.data tr:hover td{background:#fff;}
         <!-- ORDERS VIEW -->
         <div id="view-orders" class="hidden">
           <div class="panel">
-            <div class="panel-head"><div><h2>All orders</h2><p>Every row from the file.</p></div></div>
-            <div class="twrap"><table class="data"><thead><tr><th>Customer</th><th>Order</th><th>Receiver</th><th class="num">Lines</th><th class="num">Units</th><th>Due</th><th>Status</th><th>Planning</th></tr></thead><tbody id="orderRows"></tbody></table></div>
+            <div class="panel-head"><div><h2>All orders</h2><p>Every row from the file. Planned pick uses WMS due date where available; blank due dates use order date + 1 business day.</p></div></div>
+            <div class="twrap"><table class="data"><thead><tr><th>Customer</th><th>Order</th><th>Order date</th><th>Receiver</th><th class="num">Lines</th><th class="num">Units</th><th>Due</th><th>Planned pick</th><th>Status</th><th>Planning</th></tr></thead><tbody id="orderRows"></tbody></table></div>
           </div>
         </div>
 
@@ -687,7 +692,7 @@ table.data tr:hover td{background:#fff;}
       <button class="mclose" id="mClose">&times;</button>
     </div>
     <div class="mbody twrap">
-      <table class="data"><thead><tr id="mHead"><th>Order</th><th>Receiver</th><th class="num">Lines</th><th class="num">Units</th><th>Due</th><th>Status</th><th>Planning</th></tr></thead><tbody id="mRows"></tbody></table>
+      <table class="data"><thead><tr id="mHead"><th>Order</th><th>Order date</th><th>Receiver</th><th class="num">Lines</th><th class="num">Units</th><th>Due</th><th>Planned pick</th><th>Status</th><th>Planning</th></tr></thead><tbody id="mRows"></tbody></table>
     </div>
   </div>
 </div>
@@ -798,6 +803,11 @@ function parseDue(v){
   return null;
 }
 function fmtDate(v){var d=parseDue(v);return d?d.toLocaleDateString("en-AU"):cl(v);}
+function fmtDateObj(d){return d?d.toLocaleDateString("en-AU"):"";}
+function dKey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function plannedPickDate(dueDt,orderDateDt,today){
+  return dueDt||nextBD(orderDateDt||today);
+}
 
 // ── STATUS ───────────────────────────────────────────────────────
 function setStatus(msg,tone){
@@ -857,23 +867,30 @@ function parseOrders(rows){
     var sk=nm(status);
     var excl=!!EXCL[sk];
     var rev=!!REVIEW[sk];
+    var orderDateRaw=pcol(row,hdrs,["Order Date","Created Date","Created Date/Time","Date Created","Order Created Date","Created"]);
+    var orderDateDt=parseDue(orderDateRaw);
     var dueRaw=pcol(row,hdrs,["Despatch Due Date","Due Date"]);
     var dueDt=parseDue(dueRaw);
+    var plannedDt=plannedPickDate(dueDt,orderDateDt,today);
     var noDue=!dueDt;
     var cutoff=planCutoffFor(cfg,today);
-    var inWin=noDue||(dueDt&&dueDt<=cutoff);
-    var futDue=!excl&&dueDt&&!inWin;
+    var inWin=plannedDt&&plannedDt<=cutoff;
+    var futDue=!excl&&plannedDt&&!inWin;
     var incl=!excl&&!!inWin;
     var ovd=incl&&dueDt&&dueDt<today;
-    var reason=excl?"Excluded: Picked Complete":rev?"Needs review":noDue?"Planned (no due date)":futDue?"Future due":"Planned";
+    var reason=excl?"Excluded: Picked Complete":rev?"Needs review":noDue?"Planned from order date":"Planned";
+    if(futDue)reason=dueDt?"Future due":"Future planned pick";
     if(cfg&&cfg.id==="bbwecomm"&&isManifestStatus({status:status}))reason="Picked Complete - Awaiting Packing";
     out.push({
       code:code,cid:cfg?cfg.id:"",cname:cfg?cfg.name:code,mapped:!!cfg,
       order:cl(pcol(row,hdrs,["Client Reference","Order Number"]))||"Unspecified",
+      orderDateStr:fmtDate(orderDateRaw),orderDateDt:orderDateDt,
       recv:cl(pcol(row,hdrs,["Receiver Name","Receiver"]))||"Unspecified",
       lines:pn(pcol(row,hdrs,["Order Line Count","Lines"])),
       units:pn(pcol(row,hdrs,["Order Units","Units"])),
-      dueStr:fmtDate(dueRaw),dueDt:dueDt,status:status,
+      dueStr:fmtDate(dueRaw),dueDt:dueDt,
+      plannedPickStr:fmtDateObj(plannedDt),plannedPickDt:plannedDt,plannedPickDerived:noDue,
+      status:status,
       incl:incl,futDue:!!futDue,noDue:noDue,rev:rev,ovd:!!ovd,
       reason:reason
     });
@@ -1096,7 +1113,7 @@ function renderUbar(){
   document.getElementById("ubOverdue").textContent=n0(ovd.length);
   document.getElementById("ubOverdueSub").textContent="orders past despatch due date";
   document.getElementById("ubTom").textContent=n0(active.length-ovd.length);
-  document.getElementById("ubTomSub").textContent="orders due "+tom.toLocaleDateString("en-AU");
+  document.getElementById("ubTomSub").textContent="non-overdue planned orders";
   document.getElementById("ubTotal").textContent=n0(active.length);
 }
 
@@ -1223,7 +1240,7 @@ function renderClients(c){
       }
       if(row.task.proxyWarning){
         if(hasManualQty) qText="<span class=\"proxy-override\">"+n0(row.q)+" ctns (manual)</span>";
-        else qText="<span class=\"proxy-file\">"+n0(fileQty)+" planned lines"+(fileQty<=0&&g.fut>0?" (future due not counted)":" - enter actual ctns")+"</span>";
+        else qText="<span class=\"proxy-file\">"+n0(fileQty)+" planned lines"+(fileQty<=0&&g.fut>0?" (future planned pick not counted)":" - enter actual ctns")+"</span>";
       }
       var rKey=g.cfg.id+":"+row.task.id;
       var manualQtyHtml="";
@@ -1249,7 +1266,7 @@ function renderClients(c){
     if(g.cfg.id==="tentops"&&g.ntrn.length){
       var ntl=g.ntrn.reduce(function(s,o){return s+o.lines;},0);
       var ntu=g.ntrn.reduce(function(s,o){return s+o.units;},0);
-      ntHtml="<div class=\"dblock\"><div class=\"dblock-head\"><div><div class=\"dblock-title\">Non-TRN Ten Tops orders</div><div class=\"dblock-note\">Visibility only — not included in KPI headcount</div></div><span class=\"pill info\">"+g.ntrn.length+" orders · "+n0(ntl)+" lines</span></div><table class=\"dtable\"><thead><tr><th>Order</th><th>Receiver</th><th class=\"num\">Lines</th><th class=\"num\">Units</th><th>Due</th><th>Status</th></tr></thead><tbody>"+g.ntrn.map(function(o){return"<tr><td><strong>"+esc(o.order)+"</strong></td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td class=\""+(o.ovd?"overdue-date":"")+"\">"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td></tr>";}).join("")+"</tbody></table></div>";
+      ntHtml="<div class=\"dblock\"><div class=\"dblock-head\"><div><div class=\"dblock-title\">Non-TRN Ten Tops orders</div><div class=\"dblock-note\">Visibility only — not included in KPI headcount</div></div><span class=\"pill info\">"+g.ntrn.length+" orders · "+n0(ntl)+" lines</span></div><table class=\"dtable\"><thead><tr><th>Order</th><th>Receiver</th><th class=\"num\">Lines</th><th class=\"num\">Units</th><th>Due</th><th>Planned pick</th><th>Status</th></tr></thead><tbody>"+sortOrdersForDetail(g.ntrn).map(function(o){return"<tr><td><strong>"+esc(o.order)+"</strong></td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td class=\""+(o.ovd?"overdue-date":"")+"\">"+esc(o.dueStr||"—")+"</td><td>"+plannedPickCell(o)+"</td><td>"+esc(o.status)+"</td></tr>";}).join("")+"</tbody></table></div>";
     }
     html+="<details class=\"ccard"+(isBig?" big":"")+"\" open><summary class=\"ctop\"><div class=\"ctitle\"><span class=\"cname\">"+esc(g.cfg.name)+"</span><span class=\"ccode\">"+esc(g.cfg.codes.join(", "))+"</span></div><div class=\"cmets\">"+urgHtml+extraMetricHtml+"<div class=\"met\"><strong>"+n0(ords)+"</strong><span>"+oLbl+"</span></div><div class=\"met\"><strong>"+n0(lns)+"</strong><span>"+lLbl+"</span></div><div class=\"met\"><strong>"+n0(uts)+"</strong><span>"+uLbl+"</span></div><div class=\"met\"><strong>"+n1(ct(displayHrs))+"</strong><span>hrs</span></div><div class=\"ppill"+(warn?" warn":"")+"\">" +n1(ct(displayPpl))+" ppl</div><button class=\"odetbtn\" onclick=\"event.stopPropagation();openDetail('"+g.cfg.id+"')\">Orders</button></div></summary><div class=\"cbody\">"+chipsHtml+scopePill+actHtml+ntHtml+"</div></details>";
   });
@@ -1527,17 +1544,17 @@ function renderPipeline(){
   var maxN=1;
   var data=CUSTOMERS.map(function(cfg){
     var counts=days.map(function(d){
-      var n=active.filter(function(o){return cfg.codes.indexOf(o.code)>=0&&o.dueDt&&o.dueDt.getTime()===d.getTime();}).length;
+      var n=active.filter(function(o){return cfg.codes.indexOf(o.code)>=0&&o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime();}).length;
       if(n>maxN)maxN=n;
       return n;
     });
     return{id:cfg.id,name:cfg.name,counts:counts,mapped:true};
-  }).filter(function(r){return r.counts.some(function(n){return n>0;});});
+  }).filter(function(r){return r.counts.some(function(n){return n>0;});}).sort(function(a,b){return a.name.localeCompare(b.name);});
   var byUnmapped={};
   active.filter(function(o){return !o.mapped;}).forEach(function(o){
     if(!byUnmapped[o.code])byUnmapped[o.code]={id:"code:"+o.code,name:o.code,counts:days.map(function(){return 0;}),mapped:false};
     days.forEach(function(d,i){
-      if(o.dueDt&&o.dueDt.getTime()===d.getTime()){
+      if(o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime()){
         byUnmapped[o.code].counts[i]++;
         if(byUnmapped[o.code].counts[i]>maxN)maxN=byUnmapped[o.code].counts[i];
       }
@@ -1547,34 +1564,33 @@ function renderPipeline(){
     if(byUnmapped[code].counts.some(function(n){return n>0;}))data.push(byUnmapped[code]);
   });
   var dLbl=function(d){return d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});};
-  var dKey=function(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
   var pipeColgroup="<colgroup><col class=\"pcustomer\">"+days.map(function(){return"<col class=\"pday\">";}).join("")+"</colgroup>";
   var html="<div class=\"pstrip\"><table>"+pipeColgroup+"<thead><tr><th>Customer</th>"+days.map(function(d,i){return"<th style=\""+(i===0?"color:var(--red)":"")+"\">"+dLbl(d)+"</th>";}).join("")+"</tr></thead><tbody>";
   data.forEach(function(r){
     html+="<tr><td>"+esc(r.name)+"</td>"+r.counts.map(function(n,i){var ds=dKey(days[i]);return"<td>"+(n>0?"<span class=\"pnum"+(i===0?" red":"")+"\"><button class=\"pnumbtn"+(i===0?" red":"")+"\" type=\"button\" onclick=\"openPipelineDetail('"+esc(r.id)+"','"+ds+"')\">" +n0(n)+"</button></span><div class=\"pbarbg\"><div class=\"pbarfill\" style=\"width:"+Math.round(n/maxN*100)+"%;"+(i===0?"background:var(--red)":"background:var(--blue)")+";\"></div></div>":"<span class=\"pnum none\">—</span>")+"</td>";}).join("")+"</tr>";
   });
-  html+="<tr style=\"border-top:1px solid var(--line);background:var(--surface);\"><td style=\"font-weight:500;\">Total</td>"+days.map(function(d,i){var n=active.filter(function(o){return o.dueDt&&o.dueDt.getTime()===d.getTime();}).length;return"<td><span class=\"pnum"+(i===0?" red":"")+"\" style=\"font-weight:500;\">"+( n>0?n0(n):"—")+"</span></td>";}).join("")+"</tr>";
-  html+="</tbody></table></div><p style=\"font-size:10px;color:var(--faint);margin-top:8px;\">Orders by WMS despatch due date. Includes mapped and unmapped customer codes in the displayed date range. Red = today's overdue target.</p>";
+  html+="<tr style=\"border-top:1px solid var(--line);background:var(--surface);\"><td style=\"font-weight:500;\">Total</td>"+days.map(function(d,i){var n=active.filter(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime();}).length;return"<td><span class=\"pnum"+(i===0?" red":"")+"\" style=\"font-weight:500;\">"+( n>0?n0(n):"—")+"</span></td>";}).join("")+"</tr>";
+  html+="</tbody></table></div><p style=\"font-size:10px;color:var(--faint);margin-top:8px;\">Orders by planned pick date. WMS despatch due date is used where available; blank due dates use order date + 1 business day. Includes mapped and unmapped customer codes in the displayed date range.</p>";
   var lastDay=days[days.length-1];
   var beyondDates=[];
   var beyondDateSeen={};
-  active.filter(function(o){return o.dueDt&&o.dueDt.getTime()>lastDay.getTime();}).forEach(function(o){
-    var dk=dKey(o.dueDt);
+  active.filter(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()>lastDay.getTime();}).forEach(function(o){
+    var dk=dKey(o.plannedPickDt);
     if(!beyondDateSeen[dk]){
       beyondDateSeen[dk]=true;
-      beyondDates.push(o.dueDt);
+      beyondDates.push(o.plannedPickDt);
     }
   });
   beyondDates.sort(function(a,b){return a-b;});
   var beyondMax=1;
   var beyondByCustomer={};
-  active.filter(function(o){return o.dueDt&&o.dueDt.getTime()>lastDay.getTime();}).forEach(function(o){
+  active.filter(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()>lastDay.getTime();}).forEach(function(o){
     var cfg=custCfg(o.code);
     var id=cfg?cfg.id:"code:"+o.code;
     var name=cfg?cfg.name:o.code;
     if(!beyondByCustomer[id])beyondByCustomer[id]={id:id,name:name,counts:beyondDates.map(function(){return 0;})};
     beyondDates.forEach(function(d,i){
-      if(o.dueDt&&o.dueDt.getTime()===d.getTime()){
+      if(o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime()){
         beyondByCustomer[id].counts[i]++;
         if(beyondByCustomer[id].counts[i]>beyondMax)beyondMax=beyondByCustomer[id].counts[i];
       }
@@ -1588,7 +1604,7 @@ function renderPipeline(){
     beyondRows.forEach(function(r){
       html+="<tr><td>"+esc(r.name)+"</td>"+r.counts.map(function(n,i){var ds=dKey(beyondDates[i]);return"<td>"+(n>0?"<span class=\"pnum\"><button class=\"pnumbtn\" type=\"button\" onclick=\"openPipelineDetail('"+esc(r.id)+"','"+ds+"')\">"+n0(n)+"</button></span><div class=\"pbarbg\"><div class=\"pbarfill\" style=\"width:"+Math.round(n/beyondMax*100)+"%;background:var(--blue);\"></div></div>":"<span class=\"pnum none\">—</span>")+"</td>";}).join("")+"</tr>";
     });
-    html+="<tr style=\"border-top:1px solid var(--line);background:var(--surface);\"><td style=\"font-weight:500;\">Total beyond window</td>"+beyondDates.map(function(d){var n=active.filter(function(o){return o.dueDt&&o.dueDt.getTime()===d.getTime();}).length;return"<td><span class=\"pnum\" style=\"font-weight:500;\">"+(n>0?n0(n):"—")+"</span></td>";}).join("")+"</tr>";
+    html+="<tr style=\"border-top:1px solid var(--line);background:var(--surface);\"><td style=\"font-weight:500;\">Total beyond window</td>"+beyondDates.map(function(d){var n=active.filter(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime();}).length;return"<td><span class=\"pnum\" style=\"font-weight:500;\">"+(n>0?n0(n):"—")+"</span></td>";}).join("")+"</tr>";
     html+="</tbody></table></div>";
   }
   document.getElementById("pipeContent").innerHTML=html;
@@ -1597,7 +1613,7 @@ function renderPipeline(){
 // ── RENDER ORDERS ────────────────────────────────────────────────
 function renderOrders(){
   var sorted=[].concat(allOrders).sort(function(a,b){return Number(b.mapped)-Number(a.mapped)||a.cname.localeCompare(b.cname)||Number(b.incl)-Number(a.incl);});
-  document.getElementById("orderRows").innerHTML=sorted.map(function(o){var tone=!o.incl?(o.futDue?"info":"bad"):(o.rev?"warn":"good");return"<tr><td><strong>"+esc(o.cname)+"</strong><br><span style=\"font-size:10px;color:var(--faint)\">"+esc(o.code)+"</span></td><td>"+esc(o.order)+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td>"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td><td><span class=\"pill "+tone+"\">"+esc(o.reason)+"</span></td></tr>";}).join("");
+  document.getElementById("orderRows").innerHTML=sorted.map(function(o){var tone=!o.incl?(o.futDue?"info":"bad"):(o.rev?"warn":"good");return"<tr><td><strong>"+esc(o.cname)+"</strong><br><span style=\"font-size:10px;color:var(--faint)\">"+esc(o.code)+"</span></td><td>"+esc(o.order)+"</td><td>"+esc(o.orderDateStr||"—")+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td class=\""+(o.ovd?"overdue-date":"")+"\">"+esc(o.dueStr||"—")+"</td><td>"+plannedPickCell(o)+"</td><td>"+esc(o.status)+"</td><td><span class=\"pill "+tone+"\">"+esc(o.reason)+"</span></td></tr>";}).join("");
 }
 
 // ── PRINT PLAN REPORT ────────────────────────────────────────────
@@ -1686,7 +1702,7 @@ function renderReport(c){
     "<div class=\"report-toolbar\"><span>Review the plan below, then print or save as PDF.</span><button class=\"print-btn\" type=\"button\" onclick=\"window.print()\">Print Plan</button></div>"+
     "<div class=\"report-page\">"+
       "<div class=\"report-head\"><div><div class=\"report-kicker\">BRI Sydney DC</div><div class=\"report-title\">Daily Labour Plan Summary</div></div>"+
-      "<div class=\"report-meta\"><div><strong>Plan date:</strong> "+esc(due)+"</div><div><strong>Prepared:</strong> "+esc(prepared)+"</div><div><strong>Source:</strong> "+esc(loadedFileName||"Uploaded orders file")+"</div></div></div>"+
+      "<div class=\"report-meta\"><div><strong>Plan date:</strong> "+esc(due)+"</div><div><strong>Prepared:</strong> "+esc(prepared)+"</div><div><strong>Source:</strong> "+esc(loadedFileName||"Uploaded orders file")+"</div><div><strong>Planning rule:</strong> Blank WMS due dates use order date + 1 business day</div></div></div>"+
       "<div class=\"report-summary-grid\">"+
         "<div class=\"report-total-card\"><div class=\"lbl\">Total orders</div><div class=\"val\">"+n0(mappedOrders+unmOrders)+"</div></div>"+
         "<div class=\"report-total-card\"><div class=\"lbl\">Total labour hrs</div><div class=\"val\">"+n1f(rt.grandHrs)+"</div></div>"+
@@ -1701,17 +1717,19 @@ function renderReport(c){
         "<tr><td>Manual pallet activities</td><td class=\"num\">-</td><td class=\"num\">"+n1f(acts.hrs)+" hrs</td><td class=\"num\">"+n1(ct(acts.ppl))+" ppl</td></tr>"+
         "<tr><td>Team leaders</td><td class=\"num\">-</td><td class=\"num\">"+n1f(leaderHrs)+" hrs</td><td class=\"num\">"+n1(tlCount)+" ppl</td></tr>"+
       "</tbody><tfoot><tr><td>Total headcount required</td><td class=\"num\">"+n0(mappedOrders+unmOrders)+"</td><td class=\"num\">"+n1f(rt.grandHrs)+" hrs</td><td class=\"num\">"+n1(rt.grandPpl)+" ppl</td></tr></tfoot></table></div>"+
-      "<div class=\"report-note\">People calculated using productive hours per person: <strong>"+n1f(prodHrs)+" hrs</strong>. Team leaders are included as "+n0(tlCount)+" people in the total headcount.</div>"+
+      "<div class=\"report-note\">People calculated using productive hours per person: <strong>"+n1f(prodHrs)+" hrs</strong>. Team leaders are included as "+n0(tlCount)+" people in the total headcount. Planned pick date uses WMS despatch due date where available; if WMS due date is blank, the order is planned for the next business day after order date.</div>"+
     "</div>";
 }
 
 // ── OPEN MODAL ───────────────────────────────────────────────────
 var DETAIL_MODAL_HEADERS=[
   {label:"Order"},
+  {label:"Order date"},
   {label:"Receiver"},
   {label:"Lines",cls:"num"},
   {label:"Units",cls:"num"},
   {label:"Due"},
+  {label:"Planned pick"},
   {label:"Status"},
   {label:"Planning"}
 ];
@@ -1726,6 +1744,43 @@ function setModalHeaders(headers){
 function resetModalHeaders(){
   document.getElementById("detailModal").classList.remove("summary-open");
   setModalHeaders(DETAIL_MODAL_HEADERS);
+}
+
+function openDetailModal(summaryOpen){
+  var modal=document.getElementById("detailModal");
+  modal.classList.toggle("summary-open",!!summaryOpen);
+  modal.classList.add("open");
+  requestAnimationFrame(function(){
+    var body=modal.querySelector(".mbody");
+    var card=modal.querySelector(".mcard");
+    if(body){body.scrollTop=0;body.scrollLeft=0;}
+    if(card){card.scrollTop=0;card.scrollLeft=0;}
+    modal.scrollTop=0;
+    modal.scrollLeft=0;
+  });
+}
+
+function detailOrderRow(o,orderCell){
+  var orderHtml=orderCell!=null?orderCell:esc(o.order);
+  return"<tr><td>"+orderHtml+"</td><td>"+esc(o.orderDateStr||"—")+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td class=\""+(o.ovd?"overdue-date":"")+"\">"+esc(o.dueStr||"—")+"</td><td>"+plannedPickCell(o)+"</td><td>"+esc(o.status)+"</td><td>"+detailPlanningPill(o)+"</td></tr>";
+}
+
+function plannedPickCell(o){
+  if(!o.plannedPickDt)return"&mdash;";
+  var derived=o.plannedPickDerived;
+  var excluded=isManifestStatus(o);
+  var isToday=o.plannedPickDt.getTime()===sod(new Date()).getTime();
+  var cls=excluded?" class=\"excluded-pick-date\"":isToday?" class=\"today-pick-date\"":"";
+  var style=derived&&!isToday&&!excluded?" style=\"font-weight:800;color:#f97316;\"":"";
+  return"<span"+cls+(derived?" title=\"Blank WMS due date - planned for business day after order date\"":"")+style+">"+esc(o.plannedPickStr||"—")+"</span>"+(derived?"<br><span style=\"font-size:10px;color:var(--faint);\">derived</span>":"");
+}
+
+function sortOrdersForDetail(orders){
+  return [].concat(orders).sort(function(a,b){
+    var ad=a.orderDateDt?a.orderDateDt.getTime():Number.MAX_SAFE_INTEGER;
+    var bd=b.orderDateDt?b.orderDateDt.getTime():Number.MAX_SAFE_INTEGER;
+    return ad-bd||String(a.order).localeCompare(String(b.order));
+  });
 }
 
 function unmappedSummaryRows(){
@@ -1759,7 +1814,7 @@ function openUnmappedSummary(){
   document.getElementById("mRows").innerHTML=rows.map(function(r){
     return"<tr><td><strong>"+esc(r.code)+"</strong></td><td class=\"num\"><button class=\"summary-order-pill\" type=\"button\" onclick=\"openUnmappedDetail("+esc(JSON.stringify(r.code))+")\">"+n0(r.orders)+"</button></td><td class=\"num\"><strong>"+n0(r.lines)+"</strong></td><td class=\"num\">"+n0(r.units)+"</td></tr>";
   }).join("");
-  document.getElementById("detailModal").classList.add("open","summary-open");
+  openDetailModal(true);
 }
 
 function openReviewDetail(cid){
@@ -1784,11 +1839,11 @@ function openReviewDetail(cid){
   var custText=Object.keys(custs).sort().map(function(k){return custs[k];}).join(" · ");
   document.getElementById("mTitle").textContent=title;
   document.getElementById("mSub").textContent=orders.length?orders.length+" "+(orders.length===1?"order requires":"orders require")+" review · "+n0(lines)+" lines"+(!cid&&custText?" · "+custText:""):"No orders requiring review";
-  document.getElementById("mRows").innerHTML=orders.map(function(o){
+  document.getElementById("mRows").innerHTML=sortOrdersForDetail(orders).map(function(o){
     var orderCell=cid?esc(o.order):"<strong>"+esc(o.order)+"</strong><br><span style=\"font-size:10px;color:var(--faint)\">"+esc(o.cname)+" · "+esc(o.code)+"</span>";
-    return"<tr><td>"+orderCell+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td class=\""+(o.ovd?"overdue-date":"")+"\">"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td><td>"+detailPlanningPill(o)+"</td></tr>";
+    return detailOrderRow(o,orderCell);
   }).join("");
-  document.getElementById("detailModal").classList.add("open");
+  openDetailModal(false);
 }
 
 function openDetail(cid,statusKey){
@@ -1843,8 +1898,8 @@ function openDetail(cid,statusKey){
   }
   document.getElementById("mTitle").textContent=g.cfg.name+(label?" - "+label:"");
   document.getElementById("mSub").textContent=subText;
-  document.getElementById("mRows").innerHTML=orders.map(function(o){return"<tr><td>"+esc(o.order)+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td class=\""+(o.ovd?"overdue-date":"")+"\">"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td><td>"+detailPlanningPill(o)+"</td></tr>";}).join("");
-  document.getElementById("detailModal").classList.add("open");
+  document.getElementById("mRows").innerHTML=sortOrdersForDetail(orders).map(function(o){return detailOrderRow(o);}).join("");
+  openDetailModal(false);
 }
 
 function detailPlanningPill(o){
@@ -1858,6 +1913,10 @@ function detailPlanningPill(o){
     tone="warn";
     label="Part Picked";
   }
+  if(o.plannedPickDerived&&!o.rev&&nm(o.status)!=="part picked"&&o.incl){
+    tone="warn";
+    label="Planned from order date";
+  }
   return"<span class=\"pill "+tone+"\">"+esc(label)+"</span>";
 }
 
@@ -1869,8 +1928,8 @@ function openUnmappedDetail(code){
   var lines=active.reduce(function(s,o){return s+o.lines;},0);
   document.getElementById("mTitle").textContent=code;
   document.getElementById("mSub").textContent=orders.length+" orders shown · "+active.length+" planned · "+n0(lines)+" planned lines";
-  document.getElementById("mRows").innerHTML=orders.map(function(o){return"<tr><td>"+esc(o.order)+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td class=\""+(o.ovd?"overdue-date":"")+"\">"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td><td>"+detailPlanningPill(o)+"</td></tr>";}).join("");
-  document.getElementById("detailModal").classList.add("open");
+  document.getElementById("mRows").innerHTML=sortOrdersForDetail(orders).map(function(o){return detailOrderRow(o);}).join("");
+  openDetailModal(false);
 }
 
 function openPipelineDetail(cid,dateKey){
@@ -1883,19 +1942,20 @@ function openPipelineDetail(cid,dateKey){
   if(cid.indexOf("code:")===0){
     var code=cid.slice(5);
     title=code;
-    orders=allOrders.filter(function(o){return o.code===code&&o.dueDt&&o.dueDt.getTime()===d.getTime()&&(o.incl||o.futDue);});
+    orders=allOrders.filter(function(o){return o.code===code&&o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime()&&(o.incl||o.futDue);});
   }else{
     var g=groups().find(function(g){return g.cfg.id===cid;});
     if(!g)return;
     title=g.cfg.name;
-    orders=g.orders.filter(function(o){return o.dueDt&&o.dueDt.getTime()===d.getTime()&&(o.incl||o.futDue);});
+    orders=g.orders.filter(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime()&&(o.incl||o.futDue);});
   }
   var active=orders.filter(function(o){return o.incl;});
   var lines=orders.reduce(function(s,o){return s+o.lines;},0);
   document.getElementById("mTitle").textContent=title+" - "+d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
-  document.getElementById("mSub").textContent=orders.length+" orders shown · "+active.length+" planned · "+n0(lines)+" total lines";
-  document.getElementById("mRows").innerHTML=orders.map(function(o){return"<tr><td>"+esc(o.order)+"</td><td>"+esc(o.recv)+"</td><td class=\"num\">"+n0(o.lines)+"</td><td class=\"num\">"+n0(o.units)+"</td><td class=\""+(o.ovd?"overdue-date":"")+"\">"+esc(o.dueStr||"—")+"</td><td>"+esc(o.status)+"</td><td>"+detailPlanningPill(o)+"</td></tr>";}).join("");
-  document.getElementById("detailModal").classList.add("open");
+  var derived=orders.filter(function(o){return o.plannedPickDerived;}).length;
+  document.getElementById("mSub").textContent=orders.length+" orders shown · "+active.length+" planned · "+n0(lines)+" total lines"+(derived?" · "+n0(derived)+" derived from blank WMS due date":"");
+  document.getElementById("mRows").innerHTML=sortOrdersForDetail(orders).map(function(o){return detailOrderRow(o);}).join("");
+  openDetailModal(false);
 }
 
 function dataEntryInputs(){
