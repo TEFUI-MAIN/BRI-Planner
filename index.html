@@ -229,6 +229,7 @@ details.ccard>summary::-webkit-details-marker{display:none;}
 .pnum.none{color:var(--faint);}
 .pnumbtn{border:1px solid #c9dcf2;background:var(--blue-bg);color:var(--blue);font:inherit;font-weight:800;cursor:pointer;padding:4px 14px;border-radius:999px;min-width:52px;}
 .pnumbtn.red{border-color:#efc7c7;background:var(--red-bg);color:var(--red);}
+.pnumbtn.carry{border-color:#efc7c7;background:var(--red-bg);color:var(--red);}
 .pnumbtn:hover{filter:brightness(.97);}
 .pbarbg{height:4px;border-radius:2px;background:var(--surface);margin-top:4px;}
 .pbarfill{height:4px;border-radius:2px;}
@@ -1542,17 +1543,24 @@ function renderPipeline(){
   for(var i=0;i<14&&days.length<5;i++){var d=addD(today,i);if(isWD(d))days.push(d);}
   var active=allOrders.filter(function(o){return o.incl||o.futDue;});
   var maxN=1;
+  var hasCarryover=active.some(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()<today.getTime();});
   var data=CUSTOMERS.map(function(cfg){
+    var carry=active.filter(function(o){return cfg.codes.indexOf(o.code)>=0&&o.plannedPickDt&&o.plannedPickDt.getTime()<today.getTime();}).length;
+    if(carry>maxN)maxN=carry;
     var counts=days.map(function(d){
       var n=active.filter(function(o){return cfg.codes.indexOf(o.code)>=0&&o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime();}).length;
       if(n>maxN)maxN=n;
       return n;
     });
-    return{id:cfg.id,name:cfg.name,counts:counts,mapped:true};
-  }).filter(function(r){return r.counts.some(function(n){return n>0;});}).sort(function(a,b){return a.name.localeCompare(b.name);});
+    return{id:cfg.id,name:cfg.name,carry:carry,counts:counts,mapped:true};
+  }).filter(function(r){return r.carry>0||r.counts.some(function(n){return n>0;});}).sort(function(a,b){return a.name.localeCompare(b.name);});
   var byUnmapped={};
   active.filter(function(o){return !o.mapped;}).forEach(function(o){
-    if(!byUnmapped[o.code])byUnmapped[o.code]={id:"code:"+o.code,name:o.code,counts:days.map(function(){return 0;}),mapped:false};
+    if(!byUnmapped[o.code])byUnmapped[o.code]={id:"code:"+o.code,name:o.code,carry:0,counts:days.map(function(){return 0;}),mapped:false};
+    if(o.plannedPickDt&&o.plannedPickDt.getTime()<today.getTime()){
+      byUnmapped[o.code].carry++;
+      if(byUnmapped[o.code].carry>maxN)maxN=byUnmapped[o.code].carry;
+    }
     days.forEach(function(d,i){
       if(o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime()){
         byUnmapped[o.code].counts[i]++;
@@ -1561,16 +1569,19 @@ function renderPipeline(){
     });
   });
   Object.keys(byUnmapped).sort().forEach(function(code){
-    if(byUnmapped[code].counts.some(function(n){return n>0;}))data.push(byUnmapped[code]);
+    if(byUnmapped[code].carry>0||byUnmapped[code].counts.some(function(n){return n>0;}))data.push(byUnmapped[code]);
   });
   var dLbl=function(d){return d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});};
-  var pipeColgroup="<colgroup><col class=\"pcustomer\">"+days.map(function(){return"<col class=\"pday\">";}).join("")+"</colgroup>";
-  var html="<div class=\"pstrip\"><table>"+pipeColgroup+"<thead><tr><th>Customer</th>"+days.map(function(d,i){return"<th style=\""+(i===0?"color:var(--red)":"")+"\">"+dLbl(d)+"</th>";}).join("")+"</tr></thead><tbody>";
+  var pipeColgroup="<colgroup><col class=\"pcustomer\">"+(hasCarryover?"<col class=\"pday\">":"")+days.map(function(){return"<col class=\"pday\">";}).join("")+"</colgroup>";
+  var html="<div class=\"pstrip\"><table>"+pipeColgroup+"<thead><tr><th>Customer</th>"+(hasCarryover?"<th style=\"color:var(--red)\">Carryover</th>":"")+days.map(function(d,i){return"<th style=\""+(i===0?"color:var(--red)":"")+"\">"+dLbl(d)+"</th>";}).join("")+"</tr></thead><tbody>";
   data.forEach(function(r){
-    html+="<tr><td>"+esc(r.name)+"</td>"+r.counts.map(function(n,i){var ds=dKey(days[i]);return"<td>"+(n>0?"<span class=\"pnum"+(i===0?" red":"")+"\"><button class=\"pnumbtn"+(i===0?" red":"")+"\" type=\"button\" onclick=\"openPipelineDetail('"+esc(r.id)+"','"+ds+"')\">" +n0(n)+"</button></span><div class=\"pbarbg\"><div class=\"pbarfill\" style=\"width:"+Math.round(n/maxN*100)+"%;"+(i===0?"background:var(--red)":"background:var(--blue)")+";\"></div></div>":"<span class=\"pnum none\">—</span>")+"</td>";}).join("")+"</tr>";
+    var carryHtml=hasCarryover?"<td>"+(r.carry>0?"<span class=\"pnum red\"><button class=\"pnumbtn carry\" type=\"button\" onclick=\"openPipelineDetail('"+esc(r.id)+"','__carryover')\">"+n0(r.carry)+"</button></span><div class=\"pbarbg\"><div class=\"pbarfill\" style=\"width:"+Math.round(r.carry/maxN*100)+"%;background:var(--red);\"></div></div>":"<span class=\"pnum none\">—</span>")+"</td>":"";
+    html+="<tr><td>"+esc(r.name)+"</td>"+carryHtml+r.counts.map(function(n,i){var ds=dKey(days[i]);return"<td>"+(n>0?"<span class=\"pnum"+(i===0?" red":"")+"\"><button class=\"pnumbtn"+(i===0?" red":"")+"\" type=\"button\" onclick=\"openPipelineDetail('"+esc(r.id)+"','"+ds+"')\">" +n0(n)+"</button></span><div class=\"pbarbg\"><div class=\"pbarfill\" style=\"width:"+Math.round(n/maxN*100)+"%;"+(i===0?"background:var(--red)":"background:var(--blue)")+";\"></div></div>":"<span class=\"pnum none\">—</span>")+"</td>";}).join("")+"</tr>";
   });
-  html+="<tr style=\"border-top:1px solid var(--line);background:var(--surface);\"><td style=\"font-weight:500;\">Total</td>"+days.map(function(d,i){var n=active.filter(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime();}).length;return"<td><span class=\"pnum"+(i===0?" red":"")+"\" style=\"font-weight:500;\">"+( n>0?n0(n):"—")+"</span></td>";}).join("")+"</tr>";
-  html+="</tbody></table></div><p style=\"font-size:10px;color:var(--faint);margin-top:8px;\">Orders by planned pick date. WMS despatch due date is used where available; blank due dates use order date + 1 business day. Includes mapped and unmapped customer codes in the displayed date range.</p>";
+  var carryTotal=active.filter(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()<today.getTime();}).length;
+  var carryTotalHtml=hasCarryover?"<td><span class=\"pnum red\" style=\"font-weight:500;\">"+(carryTotal>0?n0(carryTotal):"—")+"</span></td>":"";
+  html+="<tr style=\"border-top:1px solid var(--line);background:var(--surface);\"><td style=\"font-weight:500;\">Total</td>"+carryTotalHtml+days.map(function(d,i){var n=active.filter(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime();}).length;return"<td><span class=\"pnum"+(i===0?" red":"")+"\" style=\"font-weight:500;\">"+( n>0?n0(n):"—")+"</span></td>";}).join("")+"</tr>";
+  html+="</tbody></table></div><p style=\"font-size:10px;color:var(--faint);margin-top:8px;\">Orders by planned pick date. Carryover = active orders with planned pick before today. WMS despatch due date is used where available; blank due dates use order date + 1 business day. Includes mapped and unmapped customer codes.</p>";
   var lastDay=days[days.length-1];
   var beyondDates=[];
   var beyondDateSeen={};
@@ -1935,25 +1946,33 @@ function openUnmappedDetail(code){
 function openPipelineDetail(cid,dateKey){
   modalReturnToSummary=false;
   resetModalHeaders();
-  var parts=dateKey.split("-").map(Number);
-  var d=new Date(parts[0],parts[1]-1,parts[2]);
+  var isCarryover=dateKey==="__carryover";
+  var parts=isCarryover?[]:dateKey.split("-").map(Number);
+  var d=isCarryover?null:new Date(parts[0],parts[1]-1,parts[2]);
+  var today=sod(new Date());
   var title="";
   var orders=[];
   if(cid.indexOf("code:")===0){
     var code=cid.slice(5);
     title=code;
-    orders=allOrders.filter(function(o){return o.code===code&&o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime()&&(o.incl||o.futDue);});
+    orders=allOrders.filter(function(o){
+      if(o.code!==code||!o.plannedPickDt||!(o.incl||o.futDue))return false;
+      return isCarryover?o.plannedPickDt.getTime()<today.getTime():o.plannedPickDt.getTime()===d.getTime();
+    });
   }else{
     var g=groups().find(function(g){return g.cfg.id===cid;});
     if(!g)return;
     title=g.cfg.name;
-    orders=g.orders.filter(function(o){return o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime()&&(o.incl||o.futDue);});
+    orders=g.orders.filter(function(o){
+      if(!o.plannedPickDt||!(o.incl||o.futDue))return false;
+      return isCarryover?o.plannedPickDt.getTime()<today.getTime():o.plannedPickDt.getTime()===d.getTime();
+    });
   }
   var active=orders.filter(function(o){return o.incl;});
   var lines=orders.reduce(function(s,o){return s+o.lines;},0);
-  document.getElementById("mTitle").textContent=title+" - "+d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
+  document.getElementById("mTitle").textContent=isCarryover?title+" - Carryover":title+" - "+d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
   var derived=orders.filter(function(o){return o.plannedPickDerived;}).length;
-  document.getElementById("mSub").textContent=orders.length+" orders shown · "+active.length+" planned · "+n0(lines)+" total lines"+(derived?" · "+n0(derived)+" derived from blank WMS due date":"");
+  document.getElementById("mSub").textContent=orders.length+" orders shown · "+active.length+" planned · "+n0(lines)+" total lines"+(isCarryover?" · planned pick before today":"")+(derived?" · "+n0(derived)+" derived from blank WMS due date":"");
   document.getElementById("mRows").innerHTML=sortOrdersForDetail(orders).map(function(o){return detailOrderRow(o);}).join("");
   openDetailModal(false);
 }
