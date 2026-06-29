@@ -1285,7 +1285,7 @@ function renderFooter(c){
   var rt=resourceTotals(c);
   var rf=document.getElementById("rfooter");
   if(rf)rf.style.display="flex";
-  document.getElementById("fmets").innerHTML="<span>Hrs: <strong>"+n1(t.th)+"</strong></span><span>Pick: <strong>"+n1(ct(t.pkp))+" ppl</strong></span><span>Pack: <strong>"+n1(ct(t.pakp))+" ppl</strong></span><span>Admin: <strong>"+n1(ct(t.adp))+" ppl</strong></span><span>Leaders: <span class=\"tlstep\"><input class=\"tlinput\" type=\"number\" min=\"0\" max=\"20\" step=\"1\" value=\""+tlCount+"\"><span class=\"tlspin\"><button class=\"tlbtn\" type=\"button\" data-delta=\"1\" aria-label=\"Increase leaders\">&#9650;</button><button class=\"tlbtn\" type=\"button\" data-delta=\"-1\" aria-label=\"Decrease leaders\">&#9660;</button></span></span></span>";
+  document.getElementById("fmets").innerHTML="<span>Hrs: <strong>"+n1(t.th)+"</strong></span><span>Pick: <strong>"+n1(ct(t.pkp))+" ppl</strong></span><span>Pack: <strong>"+n1(ct(t.pakp+t.adp))+" ppl</strong></span><span>Leaders: <span class=\"tlstep\"><input class=\"tlinput\" type=\"number\" min=\"0\" max=\"20\" step=\"1\" value=\""+tlCount+"\"><span class=\"tlspin\"><button class=\"tlbtn\" type=\"button\" data-delta=\"1\" aria-label=\"Increase leaders\">&#9650;</button><button class=\"tlbtn\" type=\"button\" data-delta=\"-1\" aria-label=\"Decrease leaders\">&#9660;</button></span></span></span>";
   document.getElementById("ftotal").innerHTML=n1(rt.grandPpl)+" ppl total";
 }
 
