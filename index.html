@@ -1518,7 +1518,9 @@ function renderOther() {
         }
       }
       updateUnmappedAlert();
-      renderEff(calc());
+      var updatedCalc = calc();
+      renderEff(updatedCalc);
+      renderReport(updatedCalc);
       renderGrandTotal();
     });
     inp.addEventListener("keydown", function(e) {
