@@ -23,7 +23,7 @@ Upload the daily "Outstanding Orders Report" export (xlsx) from the WMS, and the
 | BBW EComm | AVRBBW | Pick open work, pack picked-complete/closed orders, and pack open orders |
 | Flying Tiger | FLYTSYD-WH-F | Pre-pick, carton pick with manual carton override, and post-pick |
 | Makita | MAKAUSSYD | Batch pick, Pack station, Labels, Pallet wrap |
-| TBS | TBS | SO Orders, Transfers, and Return to Supplier with dedicated pill colours and KPI lines |
+| TBS | TBS | SO Orders at 50 lines/hr pick and 30 orders/hr wrap/pack, plus Transfers and Return to Supplier with dedicated pill colours |
 | Ten Tops | TENTSYD-WH | Store Orders, X-DOCK visibility, manual task/carton entry, and wrap pallets |
 
 Any other customer code present in the file appears in the **Unmapped customers** table at the bottom of the Roster view. The sidebar unmapped alert also opens a quick A-Z summary; each order count can be clicked to see that customer code's order detail.
