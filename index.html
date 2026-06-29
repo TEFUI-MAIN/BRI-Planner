@@ -210,11 +210,11 @@ details.ccard>summary::-webkit-details-marker{display:none;}
 .excluded-pick-date{color:var(--faint)!important;font-weight:700;}
 
 /* pipeline */
-.pstrip{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--panel);}
-.pstrip table{width:100%;border-collapse:collapse;font-size:13px;}
+.pstrip{border:1px solid var(--line);border-radius:var(--radius);overflow:visible;background:var(--panel);}
+.pstrip table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
 .pstrip col.pcustomer{width:17%;}
 .pstrip col.pday{width:16.6%;}
-.pstrip th{font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);background:var(--surface);text-align:center;}
+.pstrip th{position:sticky;top:0;z-index:5;font-size:11px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);background:var(--surface);text-align:center;box-shadow:0 1px 0 var(--line);}
 .pstrip th:first-child{text-align:left;}
 .pstrip th:last-child{border-right:0;}
 .pstrip td{padding:8px 12px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:center;}
@@ -1572,7 +1572,10 @@ function renderPipeline(){
     if(byUnmapped[code].carry>0||byUnmapped[code].counts.some(function(n){return n>0;}))data.push(byUnmapped[code]);
   });
   var dLbl=function(d){return d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});};
-  var pipeColgroup="<colgroup><col class=\"pcustomer\">"+(hasCarryover?"<col class=\"pday\">":"")+days.map(function(){return"<col class=\"pday\">";}).join("")+"</colgroup>";
+  var customerColWidth=16;
+  var pipeBucketCount=days.length+(hasCarryover?1:0);
+  var pipeDayWidth=(100-customerColWidth)/pipeBucketCount;
+  var pipeColgroup="<colgroup><col class=\"pcustomer\" style=\"width:"+customerColWidth+"%\">"+(hasCarryover?"<col class=\"pday\" style=\"width:"+pipeDayWidth+"%\">":"")+days.map(function(){return"<col class=\"pday\" style=\"width:"+pipeDayWidth+"%\">";}).join("")+"</colgroup>";
   var html="<div class=\"pstrip\"><table>"+pipeColgroup+"<thead><tr><th>Customer</th>"+(hasCarryover?"<th style=\"color:var(--red)\">Carryover</th>":"")+days.map(function(d,i){return"<th style=\""+(i===0?"color:var(--red)":"")+"\">"+dLbl(d)+"</th>";}).join("")+"</tr></thead><tbody>";
   data.forEach(function(r){
     var carryHtml=hasCarryover?"<td>"+(r.carry>0?"<span class=\"pnum red\"><button class=\"pnumbtn carry\" type=\"button\" onclick=\"openPipelineDetail('"+esc(r.id)+"','__carryover')\">"+n0(r.carry)+"</button></span><div class=\"pbarbg\"><div class=\"pbarfill\" style=\"width:"+Math.round(r.carry/maxN*100)+"%;background:var(--red);\"></div></div>":"<span class=\"pnum none\">—</span>")+"</td>":"";
@@ -1610,7 +1613,8 @@ function renderPipeline(){
   var beyondRows=Object.values(beyondByCustomer).sort(function(a,b){return a.name.localeCompare(b.name);});
   if(beyondRows.length){
     html+="<div class=\"pipe-heading sub\">Beyond 5-day window</div>";
-    var beyondColgroup="<colgroup><col class=\"pcustomer\">"+beyondDates.map(function(){return"<col class=\"pday\">";}).join("")+"</colgroup>";
+    var beyondDayWidth=(100-customerColWidth)/Math.max(1,beyondDates.length);
+    var beyondColgroup="<colgroup><col class=\"pcustomer\" style=\"width:"+customerColWidth+"%\">"+beyondDates.map(function(){return"<col class=\"pday\" style=\"width:"+beyondDayWidth+"%\">";}).join("")+"</colgroup>";
     html+="<div class=\"pstrip\"><table>"+beyondColgroup+"<thead><tr><th>Customer</th>"+beyondDates.map(function(d){return"<th>"+dLbl(d)+"</th>";}).join("")+"</tr></thead><tbody>";
     beyondRows.forEach(function(r){
       html+="<tr><td>"+esc(r.name)+"</td>"+r.counts.map(function(n,i){var ds=dKey(beyondDates[i]);return"<td>"+(n>0?"<span class=\"pnum\"><button class=\"pnumbtn\" type=\"button\" onclick=\"openPipelineDetail('"+esc(r.id)+"','"+ds+"')\">"+n0(n)+"</button></span><div class=\"pbarbg\"><div class=\"pbarfill\" style=\"width:"+Math.round(n/beyondMax*100)+"%;background:var(--blue);\"></div></div>":"<span class=\"pnum none\">—</span>")+"</td>";}).join("")+"</tr>";
