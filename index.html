@@ -1277,11 +1277,11 @@ function renderClients(c){
       var rateHtml;
       if(row.task.driver==="manualEntry"){
         // qText already contains the mandatory input - just append the rate after it
-        rateHtml=qText+" \u00f7 <input class=\"rinput\" type=\"number\" min=\"0.1\" step=\"0.1\" value=\""+row.r.toFixed(2)+"\" data-key=\""+rKey+"\"> "+row.task.unit;
+        rateHtml=qText+" \u00f7 <input class=\"rinput\" type=\"number\" min=\"1\" step=\"1\" value=\""+String(row.r)+"\" data-key=\""+rKey+"\"> "+row.task.unit;
       } else if(row.task.fixedPpl){
-        rateHtml=qText+" \u00f7 <input class=\"rinput\" type=\"number\" min=\"0.1\" step=\"0.1\" value=\""+row.r.toFixed(2)+"\" data-key=\""+rKey+"\"> "+row.task.unit+manualQtyHtml;
+        rateHtml=qText+" \u00f7 <input class=\"rinput\" type=\"number\" min=\"1\" step=\"1\" value=\""+String(row.r)+"\" data-key=\""+rKey+"\"> "+row.task.unit+manualQtyHtml;
       } else {
-        rateHtml=qText+" \u00f7 <input class=\"rinput\" type=\"number\" min=\"0.1\" step=\"0.1\" value=\""+row.r.toFixed(2)+"\" data-key=\""+rKey+"\"> "+row.task.unit+manualQtyHtml;
+        rateHtml=qText+" \u00f7 <input class=\"rinput\" type=\"number\" min=\"1\" step=\"1\" value=\""+String(row.r)+"\" data-key=\""+rKey+"\"> "+row.task.unit+manualQtyHtml;
       }
       var noteHtml="<span class=\"task-note\">"+(row.task.note?esc(row.task.note):"")+"</span>";
       var nameHtml=row.task.proxyWarning?"<span style=\"color:var(--amber);font-weight:500;\">"+esc(row.task.label)+"</span>":esc(row.task.label);
