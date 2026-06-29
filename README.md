@@ -24,6 +24,7 @@ Upload the daily "Outstanding Orders Report" export (xlsx) from the WMS, and the
 | Makita | MAKAUSSYD | Batch pick, Pack station, Labels, Pallet wrap |
 | TBS | TBS | SO Orders, Transfers, and Return to Supplier with dedicated pill colours and KPI lines |
 | Ten Tops | TENTSYD-WH | Store Orders, X-DOCK visibility, manual task/carton entry, and wrap pallets |
+| Tory Burch | AVBTRB | Pick by line using the mapped B2B line-pick KPI |
 
 Any other customer code present in the file appears in the **Unmapped customers** table at the bottom of the Roster view. The sidebar unmapped alert also opens a quick A-Z summary; each order count can be clicked to see that customer code's order detail.
 
