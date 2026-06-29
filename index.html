@@ -593,7 +593,7 @@ table.data tr:hover td{background:#fff;}
         <label class="upload-btn-label" for="fileInput2">&#8679; Choose Outstanding Orders file (.xlsx)</label>
         <input type="file" id="fileInput2" accept=".xlsx,.xls,.xlsm">
         <span id="mainStatus"></span>
-        <span class="upload-hint">Mapped: BBW B2B &middot; Tory Burch &middot; BBW EComm &middot; Flying Tiger &middot; Makita &middot; TBS &middot; Ten Tops</span>
+        <span class="upload-hint">Mapped: BBW B2B &middot; TORY BURCH &middot; BBW EComm &middot; Flying Tiger &middot; Makita &middot; TBS &middot; Ten Tops</span>
       </div>
 
       <!-- DASHBOARD -->
@@ -740,9 +740,9 @@ var CUSTOMERS = [
   {id:"bbwb2b",name:"BBW B2B",codes:["AVBBBW"],tasks:[
     {id:"pick",team:"Picking",label:"Pick by line",driver:"lines",rate:23,unit:"lines/hr"}
   ]},
-  {id:"toryburch",name:"Tory Burch",codes:["AVBTRB"],tasks:[
+  {id:"toryburch",name:"TORY BURCH",codes:["AVBTRB"],tasks:[
     {id:"pick",team:"Picking",label:"Pick by line",driver:"lines",rate:20,unit:"lines/hr"},
-    {id:"packing",team:"Packing",label:"Pack Closed Orders",driver:"pickedCompleteOrders",rate:18,unit:"orders/hr"}
+    {id:"packOpen",team:"Packing",label:"Pack Open Orders",driver:"orders",rate:18,unit:"orders/hr",highlight:"amber"}
   ]},
   {id:"makita",name:"Makita",codes:["MAKAUSSYD"],tasks:[
     {id:"batch",team:"High reach / batch",label:"Batch pick to pallets",driver:"units",rate:20,unit:"units/hr"},

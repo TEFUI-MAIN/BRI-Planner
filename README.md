@@ -19,7 +19,7 @@ Upload the daily "Outstanding Orders Report" export (xlsx) from the WMS, and the
 | Customer | WMS code | Current planning logic |
 |---|---|---|
 | BBW B2B | AVBBBW | Orders, future orders, and picked-complete visibility with B2B-specific status grouping |
-| Tory Burch | AVBTRB | Pick by line at 20 lines/hr and pack closed orders at 18 orders/hr |
+| TORY BURCH | AVBTRB | Pick by line at 20 lines/hr and pack open orders at 18 orders/hr |
 | BBW EComm | AVRBBW | Pick open work, pack picked-complete/closed orders, and pack open orders |
 | Flying Tiger | FLYTSYD-WH-F | Pre-pick, carton pick with manual carton override, and post-pick |
 | Makita | MAKAUSSYD | Batch pick, Pack station, Labels, Pallet wrap |
