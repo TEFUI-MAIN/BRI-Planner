@@ -287,7 +287,7 @@ table.data .num{text-align:right;}
 #otherPanel{overflow:visible;}
 #otherPanel .twrap{overflow:visible;}
 #otherPanel .panel-head{position:sticky;top:0;z-index:7;background:var(--panel);box-shadow:0 1px 0 var(--line);}
-#otherTable th{position:sticky;top:86px;z-index:6;background:var(--surface);box-shadow:0 1px 0 var(--line);}
+#otherTable th{position:sticky;top:var(--other-head-offset,112px);z-index:6;background:var(--surface);box-shadow:0 1px 0 var(--line);}
 tfoot tr td{border-top:2px solid var(--line);background:var(--surface);font-weight:600;font-size:14px;padding:10px 14px;}
 tfoot .num{text-align:right;}
 
@@ -1538,6 +1538,16 @@ function renderOther() {
     });
   });
   renderGrandTotal();
+  updateOtherStickyOffset();
+  requestAnimationFrame(updateOtherStickyOffset);
+}
+
+function updateOtherStickyOffset(){
+  var panel=document.getElementById("otherPanel");
+  if(!panel)return;
+  var head=panel.querySelector(".panel-head");
+  if(!head)return;
+  panel.style.setProperty("--other-head-offset",Math.ceil(head.getBoundingClientRect().height)+"px");
 }
 
 // ── RENDER PIPELINE ──────────────────────────────────────────────
@@ -2144,6 +2154,7 @@ function handleFile(e){
 document.getElementById("fileInput").addEventListener("change",handleFile);
 document.getElementById("fileInput2").addEventListener("change",handleFile);
 document.getElementById("prodHrs").addEventListener("input",render);
+window.addEventListener("resize",updateOtherStickyOffset);
 function closeDetailModal(){
   var modal=document.getElementById("detailModal");
   if(modalReturnToSummary){
