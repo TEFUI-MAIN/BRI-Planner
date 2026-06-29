@@ -593,7 +593,7 @@ table.data tr:hover td{background:#fff;}
         <label class="upload-btn-label" for="fileInput2">&#8679; Choose Outstanding Orders file (.xlsx)</label>
         <input type="file" id="fileInput2" accept=".xlsx,.xls,.xlsm">
         <span id="mainStatus"></span>
-        <span class="upload-hint">Mapped: BBW EComm &middot; TBS &middot; Ten Tops &middot; BBW B2B &middot; Tory Burch &middot; Makita &middot; Flying Tiger</span>
+        <span class="upload-hint">Mapped: BBW B2B &middot; Tory Burch &middot; BBW EComm &middot; Flying Tiger &middot; Makita &middot; TBS &middot; Ten Tops</span>
       </div>
 
       <!-- DASHBOARD -->
@@ -741,7 +741,7 @@ var CUSTOMERS = [
     {id:"pick",team:"Picking",label:"Pick by line",driver:"lines",rate:23,unit:"lines/hr"}
   ]},
   {id:"toryburch",name:"Tory Burch",codes:["AVBTRB"],tasks:[
-    {id:"pick",team:"Picking",label:"Pick by line",driver:"lines",rate:23,unit:"lines/hr"}
+    {id:"pick",team:"Picking",label:"Pick by line",driver:"lines",rate:20,unit:"lines/hr"}
   ]},
   {id:"makita",name:"Makita",codes:["MAKAUSSYD"],tasks:[
     {id:"batch",team:"High reach / batch",label:"Batch pick to pallets",driver:"units",rate:20,unit:"units/hr"},
@@ -854,6 +854,22 @@ function custCfg(code){
     if(CUSTOMERS[i].codes.indexOf(code)>=0)return CUSTOMERS[i];
   }
   return null;
+}
+
+function customerCode(cfg){
+  return (cfg&&cfg.codes&&cfg.codes.length?cfg.codes[0]:"").toString();
+}
+
+function sortGroupsByCode(a,b){
+  return customerCode(a.cfg).localeCompare(customerCode(b.cfg))||a.cfg.name.localeCompare(b.cfg.name);
+}
+
+function customerRowCode(row){
+  return (row&&row.code?row.code:row&&row.name?row.name:"").toString();
+}
+
+function sortRowsByCode(a,b){
+  return customerRowCode(a).localeCompare(customerRowCode(b))||(a.name||"").localeCompare(b.name||"");
 }
 
 function planCutoffFor(cfg,today){
@@ -1150,7 +1166,7 @@ function renderClients(c){
   var byC={};
   c.rows.forEach(function(row){var id=row.g.cfg.id;if(!byC[id])byC[id]=[];byC[id].push(row);});
   var html="";
-  var displayGroups=[].concat(c.gs).sort(function(a,b){return a.cfg.name.localeCompare(b.cfg.name);});
+  var displayGroups=[].concat(c.gs).sort(sortGroupsByCode);
   displayGroups.forEach(function(g){
     var rows=byC[g.cfg.id]||[];
     var tPpl=rows.reduce(function(s,r){return s+r.ppl;},0);
@@ -1572,11 +1588,11 @@ function renderPipeline(){
       if(n>maxN)maxN=n;
       return n;
     });
-    return{id:cfg.id,name:cfg.name,carry:carry,counts:counts,mapped:true};
-  }).filter(function(r){return r.carry>0||r.counts.some(function(n){return n>0;});}).sort(function(a,b){return a.name.localeCompare(b.name);});
+    return{id:cfg.id,name:cfg.name,code:customerCode(cfg),carry:carry,counts:counts,mapped:true};
+  }).filter(function(r){return r.carry>0||r.counts.some(function(n){return n>0;});}).sort(sortRowsByCode);
   var byUnmapped={};
   active.filter(function(o){return !o.mapped;}).forEach(function(o){
-    if(!byUnmapped[o.code])byUnmapped[o.code]={id:"code:"+o.code,name:o.code,carry:0,counts:days.map(function(){return 0;}),mapped:false};
+    if(!byUnmapped[o.code])byUnmapped[o.code]={id:"code:"+o.code,name:o.code,code:o.code,carry:0,counts:days.map(function(){return 0;}),mapped:false};
     if(o.plannedPickDt&&o.plannedPickDt.getTime()<today.getTime()){
       byUnmapped[o.code].carry++;
       if(byUnmapped[o.code].carry>maxN)maxN=byUnmapped[o.code].carry;
@@ -1622,7 +1638,8 @@ function renderPipeline(){
     var cfg=custCfg(o.code);
     var id=cfg?cfg.id:"code:"+o.code;
     var name=cfg?cfg.name:o.code;
-    if(!beyondByCustomer[id])beyondByCustomer[id]={id:id,name:name,counts:beyondDates.map(function(){return 0;})};
+    var code=cfg?customerCode(cfg):o.code;
+    if(!beyondByCustomer[id])beyondByCustomer[id]={id:id,name:name,code:code,counts:beyondDates.map(function(){return 0;})};
     beyondDates.forEach(function(d,i){
       if(o.plannedPickDt&&o.plannedPickDt.getTime()===d.getTime()){
         beyondByCustomer[id].counts[i]++;
@@ -1630,7 +1647,7 @@ function renderPipeline(){
       }
     });
   });
-  var beyondRows=Object.values(beyondByCustomer).sort(function(a,b){return a.name.localeCompare(b.name);});
+  var beyondRows=Object.values(beyondByCustomer).sort(sortRowsByCode);
   if(beyondRows.length){
     html+="<div class=\"pipe-heading sub\">Beyond 5-day window</div>";
     var beyondDayWidth=(100-customerColWidth)/Math.max(1,beyondDates.length);
@@ -1666,7 +1683,7 @@ function reportMappedMetric(g,field){
 function reportMappedRows(c){
   var byC={};
   c.rows.forEach(function(row){var id=row.g.cfg.id;if(!byC[id])byC[id]=[];byC[id].push(row);});
-  return [].concat(c.gs).sort(function(a,b){return a.cfg.name.localeCompare(b.cfg.name);}).map(function(g){
+  return [].concat(c.gs).sort(sortGroupsByCode).map(function(g){
     var rows=byC[g.cfg.id]||[];
     var hrs=rows.reduce(function(s,r){return s+r.hrs;},0);
     var ppl=rows.reduce(function(s,r){return s+r.ppl;},0);
