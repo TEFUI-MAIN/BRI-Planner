@@ -711,6 +711,7 @@ var TT_CTN_DIVISOR   = 18;
 var CASUAL_RATE      = 35;
 var EXCL = {"picked complete":1,"pick complete":1};
 var REVIEW = {"did not allocate":1,"empty order":1};
+var IGNORED_CUSTOMER_CODES = {"KIDCUBPER":1};
 var MANUAL_ACTIVITIES = [
   {id:"inboundUnload",label:"Inbound Unload"},
   {id:"inboundReceipt",label:"Inbound Receipt"},
@@ -779,6 +780,7 @@ function n1(v){return Number.isFinite(v)?f1.format(v):"0";}
 function n1f(v){return Number.isFinite(v)?f1f.format(v):"0.0";}
 function cl(v){return String(v==null?"":v).trim();}
 function nm(v){return cl(v).toLowerCase().replace(/\s+/g," ");}
+function ignoredCustomerCode(code){return !!IGNORED_CUSTOMER_CODES[cl(code).toUpperCase()];}
 function ct(v){return Number.isFinite(v)&&v>0?Math.ceil((v-0.000001)*10)/10:0;}
 function pn(v){var t=cl(v).replace(/,/g,"");var n=Number(t);return Number.isFinite(n)?n:0;}
 function isTransferOrder(o){return /^TFR_/i.test(cl(o&&o.order));}
@@ -888,6 +890,7 @@ function parseOrders(rows){
     var row=rows[i];
     var code=cl(pcol(row,hdrs,["Customer"]));
     if(!code)continue;
+    if(ignoredCustomerCode(code))continue;
     var cfg=custCfg(code);
     var status=cl(pcol(row,hdrs,["Status"]))||"Unspecified";
     var sk=nm(status);
@@ -1374,7 +1377,9 @@ function renderManualActivities(){
         activityOv[id].pallets=Math.max(0,Math.round(pn(e.target.value)));
       }
       updateManualActivityDisplay();
-      renderEff(calc());
+      var updatedCalc = calc();
+      renderEff(updatedCalc);
+      renderReport(updatedCalc);
       renderGrandTotal();
     });
   });
@@ -1390,7 +1395,9 @@ function renderManualActivities(){
       var input=document.querySelector(".activity-input[data-id=\""+id+"\"][data-field=\""+field+"\"]");
       if(input)input.value=next>0?String(next):"";
       updateManualActivityDisplay();
-      renderEff(calc());
+      var updatedCalc = calc();
+      renderEff(updatedCalc);
+      renderReport(updatedCalc);
       renderGrandTotal();
     });
   });
@@ -2049,6 +2056,10 @@ function nextDataFocusKey(inp,reverse){
   return next?next.dataset.qkey:"";
 }
 
+function keepDataFocusOnEnter(inp){
+  return inp&&inp.dataset&&inp.dataset.qkey==="flying:pick:qty";
+}
+
 function revealDataEntryInput(inp){
   var wrap=inp.closest(".proxy-qty-wrap,.mandatory-qty-wrap")||inp;
   wrap.scrollIntoView({behavior:"smooth",block:"nearest",inline:"nearest"});
@@ -2112,7 +2123,7 @@ function render(){
       inp.addEventListener("keydown",function(e){
         if(e.key==="Enter"||e.key==="Tab"){
           e.preventDefault();
-          pendingDataFocusKey=nextDataFocusKey(e.target,e.shiftKey);
+          pendingDataFocusKey=e.key==="Enter"&&keepDataFocusOnEnter(e.target)?e.target.dataset.qkey:nextDataFocusKey(e.target,e.shiftKey);
           commitQtyInput(e.target);
           render();
         }
