@@ -1273,7 +1273,7 @@ function renderClients(c){
       }
       var rKey=g.cfg.id+":"+row.task.id;
       var manualQtyHtml="";
-      if(row.task.proxyWarning){
+      if(row.task.proxyWarning&&!hasManualQty){
         var manualVal=hasManualQty?qtyOv[qKey]:"";
         manualQtyHtml="&nbsp;&nbsp;<span class=\"proxy-qty-wrap"+(hasManualQty?" filled":"")+"\"><span class=\"proxy-qty-lbl\">Actual ctns:</span><input class=\"proxy-qty-input"+(hasManualQty?" filled":"")+"\" type=\"number\" min=\"0\" step=\"1\" placeholder=\""+n0(fileQty)+"\" value=\""+manualVal+"\" data-qkey=\""+qKey+"\"></span>";
       }
