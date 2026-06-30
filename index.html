@@ -1382,6 +1382,21 @@ function renderManualActivities(){
       renderReport(updatedCalc);
       renderGrandTotal();
     });
+    inp.addEventListener("keydown",function(e){
+      if(e.key!=="Enter")return;
+      e.preventDefault();
+      e.target.dispatchEvent(new Event("input",{bubbles:true}));
+      var field=e.target.dataset.field;
+      var inputs=Array.prototype.slice.call(document.querySelectorAll(".activity-input[data-field=\""+field+"\"]"));
+      var idx=inputs.indexOf(e.target);
+      var next=inputs[idx+1]||e.target;
+      next.scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"});
+      setTimeout(function(){
+        try{next.focus({preventScroll:true});}
+        catch(err){next.focus();}
+        try{next.select();}catch(err2){}
+      },120);
+    });
   });
   document.querySelectorAll(".activity-step-btn").forEach(function(btn){
     btn.addEventListener("click",function(e){
